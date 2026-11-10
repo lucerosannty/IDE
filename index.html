@@ -149,10 +149,11 @@ input:disabled{opacity:.75;cursor:not-allowed}
     <div><b id="cn">Tu nombre</b><span class="r" id="cr">Tu especialidad</span></div>
     <p id="cv">“Mi slogan es...”</p>
    </div>
-   <p class="hint" id="chint">Probalo: escribí y mirá cómo se arma tu tarjeta de marca. Si ingresás, se completa con tus datos.</p>
-   <input type="text" id="in1" placeholder="Tu nombre" aria-label="Tu nombre" maxlength="40">
-   <input type="text" id="in2" placeholder="Tu especialidad" aria-label="Tu especialidad" maxlength="40">
-   <input type="text" id="in3" placeholder="Mi slogan es..." aria-label="Tu propuesta de valor" maxlength="90">
+<p class="hint" id="chint">
+  Al finalizar el curso, junto con tu certificado,
+  recibirás tu tarjeta de marca personal, creada
+  con los datos que completaste al registrarte.
+</p>
   </div>
  </section>
  <section class="jr">
@@ -200,9 +201,15 @@ input:disabled{opacity:.75;cursor:not-allowed}
  <h2 id="at">Ingresar</h2>
  <form id="aform">
   <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="name"></label>
-  <label class="fld" id="anr" hidden>Especialidad (opcional)<input type="text" id="ar" maxlength="40"></label>
-  <label class="fld" id="anv" hidden>Slogan (opcional)<input type="text" id="av" maxlength="90" placeholder="Mi slogan es..."></label>
- <label class="fld">
+<label class="fld" id="anr" hidden>
+  Especialidad
+  <input type="text" id="ar" maxlength="40">
+</label>
+
+<label class="fld" id="anv" hidden>
+  Slogan personal
+  <input type="text" id="av" maxlength="90" placeholder="Mi slogan es...">
+</label><label class="fld">
   <label class="fld">
   Correo electrónico
   <input
@@ -485,6 +492,8 @@ $("#ae2wrap").hidden=m!=="up";
   $("#ap2wrap").hidden=m!=="up";
 $("#ae2").required=m==="up";
   $("#ap").autocomplete=m==="up"?"new-password":"current-password";
+$("#ar").required=m==="up";
+$("#av").required=m==="up";
 
   const b=$("#createbtn");
   if(b){
@@ -515,6 +524,15 @@ async function authSubmit(){
   }
 
   if(AM==="up"){
+    if(!$("#ar").value.trim()){
+  m.textContent="Escribí tu especialidad.";
+  return;
+}
+
+if(!$("#av").value.trim()){
+  m.textContent="Escribí tu slogan personal.";
+  return;
+}
     if(e.toLowerCase()!==e2.toLowerCase()){
   m.textContent="Los correos electrónicos no coinciden.";
   return;
@@ -592,15 +610,9 @@ async function resetPw(){
  if(!e){m.textContent="Escribí tu correo arriba y tocá de nuevo.";return}
  try{await au.sendPasswordResetEmail(e);m.textContent="Te enviamos un correo para restablecer tu contraseña."}catch(x){m.textContent=aerr(x)}
 }
-function cardSync(clear){
- const p=P._perfil||{},n=$("#in1"),r=$("#in2"),v=$("#in3");
- if(USER){n.value=USER.displayName||(USER.email||"").split("@")[0]||"";r.value=p.r||"";v.value=p.v||""}
- else if(clear){n.value="";r.value="";v.value=""}
- n.disabled=!!USER;
- $("#chint").textContent=USER?"Tu tarjeta se completa con los datos de tu cuenta. Podés editar tu especialidad y tu slogan.":"Probalo: escribí y mirá cómo se arma tu tarjeta de marca. Si ingresás, se completa con tus datos.";
- bind();
+function cardSync(){
+  bind();
 }
-["#in2","#in3"].forEach(sel=>$(sel).addEventListener("input",()=>{if(!USER)return;P._perfil={r:$("#in2").value.trim().slice(0,40),v:$("#in3").value.trim().slice(0,90)};put()}));
 $("#aform").addEventListener("submit",e=>{e.preventDefault();authSubmit()});
 $("#adlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
 
@@ -666,13 +678,24 @@ function faq(){
 
 // Tarjeta de marca en vivo
 function bind(){
- const n=$("#in1").value.trim(),r=$("#in2").value.trim(),v=$("#in3").value.trim();
- $("#cn").textContent=n||"Tu nombre";
- $("#cr").textContent=r||"Tu especialidad";
- $("#cv").textContent=v?"“"+v+"”":"“Mi slogan es...”";
- $("#ini").textContent=n?n.split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join(""):"?";
+  const p=P._perfil||{};
+
+  const n=USER
+    ? USER.displayName||(USER.email||"").split("@")[0]
+    : "";
+
+  const r=USER?p.r||"":"";
+  const v=USER?p.v||"":"";
+
+  $("#cn").textContent=n||"Tu nombre";
+  $("#cr").textContent=r||"Tu especialidad";
+  $("#cv").textContent=v?"“"+v+"”":"“Mi slogan es...”";
+
+  $("#ini").textContent=n
+    ? n.split(/\s+/).slice(0,2)
+        .map(w=>w[0].toUpperCase()).join("")
+    : "?";
 }
-["#in1","#in2","#in3"].forEach(s=>$(s).addEventListener("input",bind));
 
 const h0=location.hash.slice(1);
 view(NAV.some(n=>n[0]===h0)?h0:"inicio");bind();
