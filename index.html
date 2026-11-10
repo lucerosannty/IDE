@@ -196,18 +196,21 @@ input:disabled{opacity:.75;cursor:not-allowed}
  </ul>
  <button class="btn" data-act="shut">Cerrar</button>
 </div></dialog>
-<dialog id="adlg" aria-labelledby="at"><div class="dc">
- <h2 id="at">Ingresar</h2>
- <div class="amode"><button type="button" class="on" data-act="mode" data-m="in">Ingresar</button><button type="button" data-act="mode" data-m="up">Crear cuenta</button></div>
+<dialog id="adlg" aria-label="Ingresar o crear cuenta"><div class="dc">
  <form id="aform">
   <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="name"></label>
   <label class="fld" id="anr" hidden>Especialidad (opcional)<input type="text" id="ar" maxlength="40"></label>
   <label class="fld" id="anv" hidden>Slogan (opcional)<input type="text" id="av" maxlength="90" placeholder="Mi slogan es..."></label>
   <label class="fld">Correo<input type="email" id="ae" autocomplete="email"></label>
   <label class="fld">Contraseña<input type="password" id="ap" autocomplete="current-password" minlength="6"></label>
+  <label class="fld" id="acpw" hidden>
+  Confirmar contraseña
+  <input type="password" id="ap2" autocomplete="new-password" minlength="6">
+</label>
   <p id="am" class="msg" role="status"></p>
-  <button class="btn" type="submit" id="asub">Ingresar</button>
-  <button class="btn ghost" type="button" data-act="google">Continuar con Google</button>
+<button class="btn" type="submit" id="asub">Ingresar</button>
+<button class="btn ghost" type="button" id="acreate" data-act="mode" data-m="up">Crear cuenta</button>
+<button class="btn ghost" type="button" data-act="google">Continuar con Google</button>
  </form>
  <p class="sep"><button type="button" class="lnkb" style="color:var(--br)" data-act="reset">Olvidé mi contraseña</button></p>
  <p class="hint">Guardamos tu nombre, tu correo y tus respuestas del curso para que puedas retomarlo desde cualquier dispositivo.</p>
@@ -438,28 +441,102 @@ function saveNow(){
  if(!USER||!fs)return;
  fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:(USER.displayName||"").slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
 }
-function setMode(m){
- AM=m;
- $("#at").textContent=m==="up"?"Crear cuenta":"Ingresar";
- $("#asub").textContent=m==="up"?"Crear cuenta":"Ingresar";
- $("#anw").hidden=m!=="up";$("#anr").hidden=m!=="up";$("#anv").hidden=m!=="up";
- $("#ap").autocomplete=m==="up"?"new-password":"current-password";
- document.querySelectorAll(".amode button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
- $("#am").textContent="";
+function setMode(m) {
+  AM = m;
+
+  const registro = m === "up";
+
+  $("#asub").textContent = registro ? "Confirmar registro" : "Ingresar";
+
+  $("#anw").hidden = !registro;
+  $("#anr").hidden = !registro;
+  $("#anv").hidden = !registro;
+
+  // Mostrar confirmar contraseña solo al registrarse
+  $("#acpw").hidden = !registro;
+  $("#ap2").required = registro;
+  $("#ap2").value = "";
+
+  $("#ap").autocomplete = registro ? "new-password" : "current-password";
+
+  const btnCrear = $("#acreate");
+
+  btnCrear.textContent = registro ? "Volver a ingresar" : "Crear cuenta";
+  btnCrear.dataset.m = registro ? "in" : "up";
+
+  $("#am").textContent = "";
 }
 function openAuth(){setMode("in");$("#adlg").showModal()}
 function authBtn(){if(USER&&au)au.signOut();else openAuth()}
-async function authSubmit(){
- const m=$("#am"),e=$("#ae").value.trim(),p=$("#ap").value,n=$("#an").value.trim();
- if(!au){m.textContent="El ingreso no está disponible todavía.";return}
- if(!e||!p){m.textContent="Completá tu correo y tu contraseña.";return}
- if(AM==="up"&&!n){m.textContent="Escribí tu nombre.";return}
- m.textContent="Un momento…";
- try{
-  if(AM==="up"){const c=await au.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:n.slice(0,40)});USER=au.currentUser;P._perfil={r:$("#ar").value.trim().slice(0,40),v:$("#av").value.trim().slice(0,90)};put()}
-  else await au.signInWithEmailAndPassword(e,p);
-  $("#adlg").close();uiAuth();cardSync();
- }catch(x){console.error(x);m.textContent=aerr(x)}
+async function authSubmit() {
+  const m = $("#am");
+  const e = $("#ae").value.trim();
+  const p = $("#ap").value;
+  const p2 = $("#ap2").value;
+  const n = $("#an").value.trim();
+
+  if (!au) {
+    m.textContent = "El ingreso no está disponible todavía.";
+    return;
+  }
+
+  if (!e || !p) {
+    m.textContent = "Completá tu correo y tu contraseña.";
+    return;
+  }
+
+  if (AM === "up") {
+    if (!n) {
+      m.textContent = "Escribí tu nombre.";
+      return;
+    }
+
+    if (p.length < 6) {
+      m.textContent = "La contraseña debe tener al menos 6 caracteres.";
+      return;
+    }
+
+    if (!p2) {
+      m.textContent = "Confirmá tu contraseña.";
+      return;
+    }
+
+    if (p !== p2) {
+      m.textContent = "Las contraseñas no coinciden. Intentá nuevamente.";
+      return;
+    }
+  }
+
+  m.textContent = "Un momento…";
+
+  try {
+    if (AM === "up") {
+      const c = await au.createUserWithEmailAndPassword(e, p);
+
+      await c.user.updateProfile({
+        displayName: n.slice(0, 40)
+      });
+
+      USER = au.currentUser;
+
+      P._perfil = {
+        r: $("#ar").value.trim().slice(0, 40),
+        v: $("#av").value.trim().slice(0, 90)
+      };
+
+      put();
+    } else {
+      await au.signInWithEmailAndPassword(e, p);
+    }
+
+    $("#adlg").close();
+    uiAuth();
+    cardSync();
+
+  } catch (x) {
+    console.error(x);
+    m.textContent = aerr(x);
+  }
 }
 async function gAuth(){
  const m=$("#am");
