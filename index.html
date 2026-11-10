@@ -125,33 +125,6 @@ dialog::backdrop{background:rgba(10,14,40,.55)}
 .amode button.on{background:var(--br);color:var(--bi);border-color:var(--br)}
 .sep{margin:14px 0 8px}
 input:disabled{opacity:.75;cursor:not-allowed}
-.avatar-grid {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.avatar-opcion {
-  background: var(--sf);
-  border: 1px solid var(--ln);
-  border-radius: 10px;
-  padding: 8px 2px;
-  font-size: 24px;
-  cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
-}
-
-.avatar-opcion:hover {
-  transform: scale(1.12);
-  border-color: var(--br);
-}
-
-@media (max-width: 600px) {
-  .avatar-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
 @media (max-width:760px){.frow{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.mrow{grid-template-columns:40px 1fr}.side{grid-column:1/-1}}
 </style>
 </head>
@@ -176,8 +149,10 @@ input:disabled{opacity:.75;cursor:not-allowed}
     <div><b id="cn">Tu nombre</b><span class="r" id="cr">Tu especialidad</span></div>
     <p id="cv">“Mi slogan es...”</p>
    </div>
-   <p class="hint" id="chint">Tu tarjeta ¡al terminar los modulos te daremos un certificado con ella!</p>
-
+   <p class="hint" id="chint">Probalo: escribí y mirá cómo se arma tu tarjeta de marca. Si ingresás, se completa con tus datos.</p>
+   <input type="text" id="in1" placeholder="Tu nombre" aria-label="Tu nombre" maxlength="40">
+   <input type="text" id="in2" placeholder="Tu especialidad" aria-label="Tu especialidad" maxlength="40">
+   <input type="text" id="in3" placeholder="Mi slogan es..." aria-label="Tu propuesta de valor" maxlength="90">
   </div>
  </section>
  <section class="jr">
@@ -221,21 +196,18 @@ input:disabled{opacity:.75;cursor:not-allowed}
  </ul>
  <button class="btn" data-act="shut">Cerrar</button>
 </div></dialog>
-<dialog id="adlg" aria-label="Ingresar o crear cuenta"><div class="dc">
+<dialog id="adlg" aria-labelledby="at"><div class="dc">
+ <h2 id="at">Ingresar</h2>
+ <div class="amode"><button type="button" class="on" data-act="mode" data-m="in">Ingresar</button><button type="button" data-act="mode" data-m="up">Crear cuenta</button></div>
  <form id="aform">
   <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="name"></label>
   <label class="fld" id="anr" hidden>Especialidad (opcional)<input type="text" id="ar" maxlength="40"></label>
   <label class="fld" id="anv" hidden>Slogan (opcional)<input type="text" id="av" maxlength="90" placeholder="Mi slogan es..."></label>
   <label class="fld">Correo<input type="email" id="ae" autocomplete="email"></label>
   <label class="fld">Contraseña<input type="password" id="ap" autocomplete="current-password" minlength="6"></label>
-  <label class="fld" id="acpw" hidden>
-  Confirmar contraseña
-  <input type="password" id="ap2" autocomplete="new-password" minlength="6">
-</label>
   <p id="am" class="msg" role="status"></p>
-<button class="btn" type="submit" id="asub">Ingresar</button>
-<button class="btn ghost" type="button" id="acreate" data-act="mode" data-m="up">Crear cuenta</button>
-<button class="btn ghost" type="button" data-act="google">Continuar con Google</button>
+  <button class="btn" type="submit" id="asub">Ingresar</button>
+  <button class="btn ghost" type="button" data-act="google">Continuar con Google</button>
  </form>
  <p class="sep"><button type="button" class="lnkb" style="color:var(--br)" data-act="reset">Olvidé mi contraseña</button></p>
  <p class="hint">Guardamos tu nombre, tu correo y tus respuestas del curso para que puedas retomarlo desde cualquier dispositivo.</p>
@@ -423,7 +395,7 @@ function lock(){
  return '<section class="cap ent"><h2>Ingresá para acceder al curso</h2><p>El curso es solo para personas registradas. Con tu cuenta podés ver los módulos, completar las actividades y retomar tu progreso desde cualquier dispositivo.</p><button class="btn" data-act="auth">Ingresar o crear cuenta</button></section>';
 }
 function uiAuth(){
- const b=$("#authbtn");if(b)b.textContent=USER?"Salir":"Ingresar";
+ const b=$("#authbtn");if(b)b.textContent=USER?((USER.displayName||USER.email||"").split(/[ @]/)[0]||"Cuenta")+" (salir)":"Ingresar";
  const g=$("#gate");if(g)g.innerHTML=gate();
  const f=$("#fn");if(f&&USER&&!f.value)f.value=USER.displayName||"";
 }
@@ -455,9 +427,6 @@ function mergeP(c){
 async function loadCloud(){
  try{
   const d=await fs.collection("usuarios").doc(USER.uid).get();
-  if (d.exists && AVATARES.includes(d.data().avatar)) {
-  P._avatar = d.data().avatar;
-}
   const ch=d.exists?mergeP((d.data()||{}).p||{}):false;
   try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}
   saveNow();
@@ -469,102 +438,28 @@ function saveNow(){
  if(!USER||!fs)return;
  fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:(USER.displayName||"").slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
 }
-function setMode(m) {
-  AM = m;
-
-  const registro = m === "up";
-
-  $("#asub").textContent = registro ? "Confirmar registro" : "Ingresar";
-
-  $("#anw").hidden = !registro;
-  $("#anr").hidden = !registro;
-  $("#anv").hidden = !registro;
-
-  // Mostrar confirmar contraseña solo al registrarse
-  $("#acpw").hidden = !registro;
-  $("#ap2").required = registro;
-  $("#ap2").value = "";
-
-  $("#ap").autocomplete = registro ? "new-password" : "current-password";
-
-  const btnCrear = $("#acreate");
-
-  btnCrear.textContent = registro ? "Volver a ingresar" : "Crear cuenta";
-  btnCrear.dataset.m = registro ? "in" : "up";
-
-  $("#am").textContent = "";
+function setMode(m){
+ AM=m;
+ $("#at").textContent=m==="up"?"Crear cuenta":"Ingresar";
+ $("#asub").textContent=m==="up"?"Crear cuenta":"Ingresar";
+ $("#anw").hidden=m!=="up";$("#anr").hidden=m!=="up";$("#anv").hidden=m!=="up";
+ $("#ap").autocomplete=m==="up"?"new-password":"current-password";
+ document.querySelectorAll(".amode button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+ $("#am").textContent="";
 }
 function openAuth(){setMode("in");$("#adlg").showModal()}
 function authBtn(){if(USER&&au)au.signOut();else openAuth()}
-async function authSubmit() {
-  const m = $("#am");
-  const e = $("#ae").value.trim();
-  const p = $("#ap").value;
-  const p2 = $("#ap2").value;
-  const n = $("#an").value.trim();
-
-  if (!au) {
-    m.textContent = "El ingreso no está disponible todavía.";
-    return;
-  }
-
-  if (!e || !p) {
-    m.textContent = "Completá tu correo y tu contraseña.";
-    return;
-  }
-
-  if (AM === "up") {
-    if (!n) {
-      m.textContent = "Escribí tu nombre.";
-      return;
-    }
-
-    if (p.length < 6) {
-      m.textContent = "La contraseña debe tener al menos 6 caracteres.";
-      return;
-    }
-
-    if (!p2) {
-      m.textContent = "Confirmá tu contraseña.";
-      return;
-    }
-
-    if (p !== p2) {
-      m.textContent = "Las contraseñas no coinciden. Intentá nuevamente.";
-      return;
-    }
-  }
-
-  m.textContent = "Un momento…";
-
-  try {
-    if (AM === "up") {
-      const c = await au.createUserWithEmailAndPassword(e, p);
-
-      await c.user.updateProfile({
-        displayName: n.slice(0, 40)
-      });
-
-      USER = au.currentUser;
-
-      P._perfil = {
-        r: $("#ar").value.trim().slice(0, 40),
-        v: $("#av").value.trim().slice(0, 90)
-      };
-
-      put();
-    } else {
-      await au.signInWithEmailAndPassword(e, p);
-    }
-
-    $("#adlg").close();
-    uiAuth();
-    cardSync();
-
-  } catch (x) {
-    console.error(x);
-    m.textContent = aerr(x);
-  }
+async function authSubmit(){
+ const m=$("#am"),e=$("#ae").value.trim(),p=$("#ap").value,n=$("#an").value.trim();
+ if(!au){m.textContent="El ingreso no está disponible todavía.";return}
+ if(!e||!p){m.textContent="Completá tu correo y tu contraseña.";return}
+ if(AM==="up"&&!n){m.textContent="Escribí tu nombre.";return}
+ m.textContent="Un momento…";
+ try{
+  if(AM==="up"){const c=await au.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:n.slice(0,40)});USER=au.currentUser;P._perfil={r:$("#ar").value.trim().slice(0,40),v:$("#av").value.trim().slice(0,90)};put()}
+  else await au.signInWithEmailAndPassword(e,p);
+  $("#adlg").close();uiAuth();cardSync();
+ }catch(x){console.error(x);m.textContent=aerr(x)}
 }
 async function gAuth(){
  const m=$("#am");
@@ -577,29 +472,15 @@ async function resetPw(){
  if(!e){m.textContent="Escribí tu correo arriba y tocá de nuevo.";return}
  try{await au.sendPasswordResetEmail(e);m.textContent="Te enviamos un correo para restablecer tu contraseña."}catch(x){m.textContent=aerr(x)}
 }
-function cardSync(clear) {
-  const p = P._perfil || {};
-
-  const n = USER
-    ? (USER.displayName || (USER.email || "").split("@")[0])
-    : "";
-
-  const r = USER ? (p.r || "") : "";
-  const v = USER ? (p.v || "") : "";
-
-  $("#cn").textContent = n || "Tu nombre";
-  $("#cr").textContent = r || "Tu especialidad";
-  $("#cv").textContent = v ? "“" + v + "”" : "“Mi slogan es...”";
-
-  $("#ini").textContent = n
-    ? n.split(/\s+/).slice(0, 2)
-        .map(w => w[0].toUpperCase()).join("")
-    : "?";
-
-  $("#chint").textContent = USER
-    ? "Estos datos fueron definidos al crear tu cuenta."
-    : "Registrate para crear tu tarjeta de marca personal.";
+function cardSync(clear){
+ const p=P._perfil||{},n=$("#in1"),r=$("#in2"),v=$("#in3");
+ if(USER){n.value=USER.displayName||(USER.email||"").split("@")[0]||"";r.value=p.r||"";v.value=p.v||""}
+ else if(clear){n.value="";r.value="";v.value=""}
+ n.disabled=!!USER;
+ $("#chint").textContent=USER?"Tu tarjeta se completa con los datos de tu cuenta. Podés editar tu especialidad y tu slogan.":"Probalo: escribí y mirá cómo se arma tu tarjeta de marca. Si ingresás, se completa con tus datos.";
+ bind();
 }
+["#in2","#in3"].forEach(sel=>$(sel).addEventListener("input",()=>{if(!USER)return;P._perfil={r:$("#in2").value.trim().slice(0,40),v:$("#in3").value.trim().slice(0,90)};put()}));
 $("#aform").addEventListener("submit",e=>{e.preventDefault();authSubmit()});
 $("#adlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
 
@@ -615,57 +496,6 @@ const FB={
   appId:"1:1034732296107:web:984499482a5669a641a4ee"
 };
 let fs=null,FD=[],FE="",FC="";
-const AVATARES = ["😎", "🤓", "🥸", "🤠", "🥳", "😈", "👽", "🤖",
-  "👾", "👻", "💀", "🎃", "🦊", "🐱", "🐶", "🐼",
-  "🐸", "🦁", "🐵", "🐧", "🦄", "🐲", "🦋", "🦉",
-  "🚀", "⚡", "🔥", "💎", "🌈", "🌙", "⭐", "🎮"];
-function cargarAvatares() {
-  const contenedor = document.getElementById("listaAvatares");
-
-  contenedor.innerHTML = "";
-
-  AVATARES.forEach(emoji => {
-    const boton = document.createElement("button");
-
-    boton.type = "button";
-    boton.textContent = emoji;
-    boton.className = "avatar-opcion";
-    boton.title = "Elegir " + emoji;
-
-    boton.addEventListener("click", () => elegirAvatar(emoji));
-
-    contenedor.appendChild(boton);
-  });
-}
-
-cargarAvatares();
-async function elegirAvatar(emoji) {
-  if (!USER || !fs || !AVATARES.includes(emoji)) return;
-
-  try {
-    await fs.collection("usuarios").doc(USER.uid).set({
-      avatar: emoji
-    }, { merge: true });
-
-    $("#ini").textContent = emoji;
-    P._avatar = emoji;
-  } catch (error) {
-    console.error(error);
-    alert("No se pudo guardar el avatar.");
-  }
-}
-
-function mostrarAvatar() {
-  const selector = $("#avatares");
-
-  if (selector) selector.hidden = !USER;
-
-  if (!USER) return;
-
-  if (AVATARES.includes(P._avatar)) {
-    $("#ini").textContent = P._avatar;
-  }
-}
 function initForum(){
  try{
   if(FB.projectId.startsWith("TU_")){FE="cfg";AR=true;rf();return}
@@ -714,9 +544,18 @@ function faq(){
  return `<section class="mh"><h1>Preguntas frecuentes</h1><p class="lead">Todo lo que necesitás saber antes de empezar el curso.</p></section>`+FAQ.map(g=>`<section class="cap"><h2>${g.t}</h2>${g.q.map(([q,a])=>`<details class="qa"><summary>${q}</summary><p>${a}</p></details>`).join("")}</section>`).join("");
 }
 
-const h0=location.hash.slice(1);view(NAV.some(n=>n[0]===h0)?h0:"inicio");
-cardSync();
-mostrarAvatar();
+// Tarjeta de marca en vivo
+function bind(){
+ const n=$("#in1").value.trim(),r=$("#in2").value.trim(),v=$("#in3").value.trim();
+ $("#cn").textContent=n||"Tu nombre";
+ $("#cr").textContent=r||"Tu especialidad";
+ $("#cv").textContent=v?"“"+v+"”":"“Mi slogan es...”";
+ $("#ini").textContent=n?n.split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join(""):"?";
+}
+["#in1","#in2","#in3"].forEach(s=>$(s).addEventListener("input",bind));
+
+const h0=location.hash.slice(1);
+view(NAV.some(n=>n[0]===h0)?h0:"inicio");bind();
 </script>
 </body>
 </html>
