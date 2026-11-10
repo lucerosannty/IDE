@@ -125,6 +125,33 @@ dialog::backdrop{background:rgba(10,14,40,.55)}
 .amode button.on{background:var(--br);color:var(--bi);border-color:var(--br)}
 .sep{margin:14px 0 8px}
 input:disabled{opacity:.75;cursor:not-allowed}
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.avatar-opcion {
+  background: var(--sf);
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  padding: 8px 2px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.avatar-opcion:hover {
+  transform: scale(1.12);
+  border-color: var(--br);
+}
+
+@media (max-width: 600px) {
+  .avatar-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
 @media (max-width:760px){.frow{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.mrow{grid-template-columns:40px 1fr}.side{grid-column:1/-1}}
 </style>
 </head>
@@ -428,6 +455,9 @@ function mergeP(c){
 async function loadCloud(){
  try{
   const d=await fs.collection("usuarios").doc(USER.uid).get();
+  if (d.exists && AVATARES.includes(d.data().avatar)) {
+  P._avatar = d.data().avatar;
+}
   const ch=d.exists?mergeP((d.data()||{}).p||{}):false;
   try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}
   saveNow();
@@ -585,6 +615,57 @@ const FB={
   appId:"1:1034732296107:web:984499482a5669a641a4ee"
 };
 let fs=null,FD=[],FE="",FC="";
+const AVATARES = ["😎", "🤓", "🥸", "🤠", "🥳", "😈", "👽", "🤖",
+  "👾", "👻", "💀", "🎃", "🦊", "🐱", "🐶", "🐼",
+  "🐸", "🦁", "🐵", "🐧", "🦄", "🐲", "🦋", "🦉",
+  "🚀", "⚡", "🔥", "💎", "🌈", "🌙", "⭐", "🎮"];
+function cargarAvatares() {
+  const contenedor = document.getElementById("listaAvatares");
+
+  contenedor.innerHTML = "";
+
+  AVATARES.forEach(emoji => {
+    const boton = document.createElement("button");
+
+    boton.type = "button";
+    boton.textContent = emoji;
+    boton.className = "avatar-opcion";
+    boton.title = "Elegir " + emoji;
+
+    boton.addEventListener("click", () => elegirAvatar(emoji));
+
+    contenedor.appendChild(boton);
+  });
+}
+
+cargarAvatares();
+async function elegirAvatar(emoji) {
+  if (!USER || !fs || !AVATARES.includes(emoji)) return;
+
+  try {
+    await fs.collection("usuarios").doc(USER.uid).set({
+      avatar: emoji
+    }, { merge: true });
+
+    $("#ini").textContent = emoji;
+    P._avatar = emoji;
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo guardar el avatar.");
+  }
+}
+
+function mostrarAvatar() {
+  const selector = $("#avatares");
+
+  if (selector) selector.hidden = !USER;
+
+  if (!USER) return;
+
+  if (AVATARES.includes(P._avatar)) {
+    $("#ini").textContent = P._avatar;
+  }
+}
 function initForum(){
  try{
   if(FB.projectId.startsWith("TU_")){FE="cfg";AR=true;rf();return}
@@ -635,6 +716,7 @@ function faq(){
 
 const h0=location.hash.slice(1);view(NAV.some(n=>n[0]===h0)?h0:"inicio");
 cardSync();
+mostrarAvatar();
 </script>
 </body>
 </html>
