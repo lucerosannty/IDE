@@ -29,6 +29,15 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .tabs a{white-space:nowrap;padding:10px 16px;color:var(--mu);text-decoration:none;font-weight:600;border-bottom:4px solid transparent;margin-bottom:-1px}
 .tabs a:hover{color:var(--br)}
 .tabs a.on{color:var(--br);border-bottom-color:var(--ac)}
+.tabs .nav-group{position:relative;flex:0 0 auto}
+.tabs .nav-group summary{white-space:nowrap;list-style:none;cursor:pointer;padding:10px 16px;color:var(--mu);font-weight:600;border-bottom:4px solid transparent;margin-bottom:-1px}
+.tabs .nav-group summary::-webkit-details-marker{display:none}
+.tabs .nav-group summary::after{content:" ▾";font-size:.8em}
+.tabs .nav-group[open] summary,.tabs .nav-group summary:hover{color:var(--br)}
+.tabs .nav-menu{position:fixed;top:var(--menu-top,100px);left:var(--menu-left,20px);z-index:60;min-width:190px;padding:6px;background:var(--sf);border:1px solid var(--ln);border-radius:10px;box-shadow:0 12px 28px -16px rgba(0,0,0,.45)}
+.tabs .nav-menu a{display:block;padding:9px 12px;border:0;margin:0;border-radius:7px}
+.tabs .nav-menu a:hover{background:var(--so)}
+@media(max-width:760px){.tabs .nav-menu{left:16px;right:16px;min-width:0}}
 .hero{display:grid;grid-template-columns:1.15fr 1fr;gap:40px;align-items:center;padding:8px 0 48px}
 .hero p,.lead{color:var(--mu);font-size:1.1rem;max-width:34em}
 .cta{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:24px}
@@ -141,6 +150,9 @@ input:disabled{opacity:.75;cursor:not-allowed}
     <p id="cv">“Mi slogan es...”</p>
    </div>
    <p class="hint" id="chint">Probalo: escribí y mirá cómo se arma tu tarjeta de marca. Si ingresás, se completa con tus datos.</p>
+   <input type="text" id="in1" placeholder="Tu nombre" aria-label="Tu nombre" maxlength="40">
+   <input type="text" id="in2" placeholder="Tu especialidad" aria-label="Tu especialidad" maxlength="40">
+   <input type="text" id="in3" placeholder="Mi slogan es..." aria-label="Tu propuesta de valor" maxlength="90">
   </div>
  </section>
  <section class="jr">
@@ -188,10 +200,9 @@ input:disabled{opacity:.75;cursor:not-allowed}
  <h2 id="at">Ingresar</h2>
  <div class="amode"><button type="button" class="on" data-act="mode" data-m="in">Ingresar</button><button type="button" data-act="mode" data-m="up">Crear cuenta</button></div>
  <form id="aform">
-  <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="given-name"></label>
-  <label class="fld" id="aap" hidden>Apellido<input type="text" id="aa" maxlength="40" autocomplete="family-name"></label>
-  <label class="fld" id="anr" hidden>Especialidad<input type="text" id="ar" maxlength="40"></label>
-  <label class="fld" id="anv" hidden>Slogan<input type="text" id="av" maxlength="90" placeholder="Mi slogan es..."></label>
+  <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="name"></label>
+  <label class="fld" id="anr" hidden>Especialidad (opcional)<input type="text" id="ar" maxlength="40"></label>
+  <label class="fld" id="anv" hidden>Slogan (opcional)<input type="text" id="av" maxlength="90" placeholder="Mi slogan es..."></label>
   <label class="fld">Correo<input type="email" id="ae" autocomplete="email"></label>
   <label class="fld">Contraseña<input type="password" id="ap" autocomplete="current-password" minlength="6"></label>
   <p id="am" class="msg" role="status"></p>
@@ -201,19 +212,6 @@ input:disabled{opacity:.75;cursor:not-allowed}
  <p class="sep"><button type="button" class="lnkb" style="color:var(--br)" data-act="reset">Olvidé mi contraseña</button></p>
  <p class="hint">Guardamos tu nombre, tu correo y tus respuestas del curso para que puedas retomarlo desde cualquier dispositivo.</p>
  <button class="btn ghost sm" type="button" data-act="shut2" style="margin-top:12px">Cerrar</button>
-</div></dialog>
-<dialog id="pdlg" aria-labelledby="pt" closedby="none"><div class="dc">
- <h2 id="pt">Completá tu tarjeta de marca</h2>
- <p>Para usar el curso, completá tu nombre y apellido, tu especialidad y tu slogan. Con eso armamos tu tarjeta de marca: la ves en el inicio y la podés cambiar cuando quieras.</p>
- <form id="pform">
-  <label class="fld">Nombre<input type="text" id="pn" maxlength="40" autocomplete="given-name"></label>
-  <label class="fld">Apellido<input type="text" id="pa" maxlength="40" autocomplete="family-name"></label>
-  <label class="fld">Especialidad<input type="text" id="pr" maxlength="40"></label>
-  <label class="fld">Slogan<input type="text" id="pv" maxlength="90" placeholder="Mi slogan es..."></label>
-  <p id="pm" class="msg" role="status"></p>
-  <button class="btn" type="submit">Guardar</button>
-  <button class="lnkb" type="button" data-act="out" style="color:var(--mu);margin-left:12px">Cerrar sesión</button>
- </form>
 </div></dialog>
 </div>
 
@@ -290,7 +288,27 @@ const pct=m=>steps(m).filter(Boolean).length*25;
 const chips=m=>steps(m).map((d,i)=>`<span class="chip${d?" on":""}">${d?"✓ ":""}${SN[i]}</span>`).join("");
 const fld=(m,k,l,r)=>`<label class="fld">${l}<textarea data-m="${m.id}" data-k="${k}" rows="${r||3}" placeholder="Escribí tu respuesta"></textarea></label>`;
 const NAV=[["inicio","Inicio"],...M.map(m=>[m.s,m.id+" "+m.n]),["foro","Foro"],["faq","Preguntas frecuentes"],["manual","Mi manual"]];
-$("#nav").innerHTML=NAV.map(([k,n])=>`<a href="#${k}" data-go="${k}" role="tab">${n}</a>`).join("")+'<button class="abtn" data-act="auth" id="authbtn">Ingresar</button>';
+$("#nav").innerHTML=
+ `<a href="#inicio" data-go="inicio" role="tab">Inicio</a>
+  <details class="nav-group">
+   <summary>Módulos</summary>
+   <div class="nav-menu">${M.map(m=>`<a href="#${m.s}" data-go="${m.s}" role="tab">${m.id} ${m.n}</a>`).join("")}</div>
+  </details>
+  <a href="#foro" data-go="foro" role="tab">Foro</a>
+  <a href="#faq" data-go="faq" role="tab">Preguntas frecuentes</a>
+  <a href="#manual" data-go="manual" role="tab">Mi manual</a>
+  <button class="abtn" data-act="auth" id="authbtn">Ingresar</button>`;
+const moduleDropdown = $("#nav .nav-group");
+moduleDropdown.addEventListener("toggle", () => {
+ if (!moduleDropdown.open) return;
+ const r = moduleDropdown.querySelector("summary").getBoundingClientRect();
+ const menu = moduleDropdown.querySelector(".nav-menu");
+ menu.style.setProperty("--menu-top", `${r.bottom + 4}px`);
+ menu.style.setProperty("--menu-left", `${Math.max(12, Math.min(r.left, window.innerWidth - 210))}px`);
+});
+document.addEventListener("click", e => {
+ if (moduleDropdown.open && !moduleDropdown.contains(e.target)) moduleDropdown.open = false;
+});
 
 function homeList(){
  const t=Math.round(M.reduce((a,m)=>a+pct(m),0)/M.length);
@@ -326,7 +344,7 @@ function view(r){
   if(m&&!lk)document.querySelectorAll("#app textarea").forEach(t=>t.value=st(m.id).f[t.dataset.k]||"")}
  window.scrollTo(0,0);
 }
-function go(r){try{history.replaceState(null,"",r==="inicio"?location.pathname+location.search:"#"+r)}catch(e){}view(r)}
+function go(r){try{history.replaceState(null,"",r==="inicio"?location.pathname+location.search:"#"+r)}catch(e){}const menu=$("#nav .nav-group");if(menu)menu.open=false;view(r)}
 
 function grade(m){
  const s=st(m.id);let ok=0,miss=0;
@@ -354,7 +372,6 @@ document.addEventListener("click",e=>{
  else if(k==="google")gAuth();
  else if(k==="reset")resetPw();
  else if(k==="shut2")$("#adlg").close();
- else if(k==="out"){if(au)au.signOut()}
  else if(k==="copy"){
   const t=M.map(x=>`${x.id}. ${x.n.toUpperCase()}\n`+filled(x).map(([k2,l])=>`${l}\n${val(x,k2)}`).join("\n\n")).join("\n\n");
   const msg=$("#cm");
@@ -368,18 +385,17 @@ document.addEventListener("input",e=>{
 addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(h!==cur&&NAV.some(n=>n[0]===h))view(h)});
 
 // Cuentas de usuario (Firebase Authentication) y guardado de respuestas en la nube
-let USER=null,au=null,AM="in",ct=null,AR=false,PA=false;
+let USER=null,au=null,AM="in",ct=null,AR=false;
 const AE={"auth/invalid-credential":"Correo o contraseña incorrectos.","auth/wrong-password":"Correo o contraseña incorrectos.","auth/user-not-found":"No hay una cuenta con ese correo.","auth/email-already-in-use":"Ese correo ya tiene una cuenta. Probá ingresar.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/invalid-email":"El correo no es válido.","auth/popup-closed-by-user":"Cerraste la ventana de Google antes de terminar.","auth/unauthorized-domain":"Este sitio no está autorizado en Firebase (Authentication, Configuración, Dominios autorizados).","auth/operation-not-allowed":"Ese método de ingreso no está activado en Firebase.","auth/too-many-requests":"Demasiados intentos. Probá más tarde.","auth/network-request-failed":"Sin conexión. Revisá tu internet."};
 const aerr=x=>AE[x&&x.code]||"No se pudo completar ("+((x&&x.code)||"error")+").";
 const gate=()=>USER?"":'<p class="msg">Ingresá para guardar tus respuestas en tu cuenta y retomarlas desde cualquier dispositivo. <button class="lnkb" style="color:var(--br)" data-act="auth">Ingresar</button></p>';
-const dn=()=>{if(!USER)return"";const p=P._perfil||{};return [p.n,p.a].filter(Boolean).join(" ")||USER.displayName||(USER.email||"").split("@")[0]||"Anónimo"};
-const who=()=>dn().slice(0,30);
+const who=()=>USER?(USER.displayName||(USER.email||"").split("@")[0]||"Anónimo").slice(0,30):"";
 function lock(){
  if(!AR)return '<section class="cap"><p class="msg">Cargando tu sesión…</p></section>';
  return '<section class="cap ent"><h2>Ingresá para acceder al curso</h2><p>El curso es solo para personas registradas. Con tu cuenta podés ver los módulos, completar las actividades y retomar tu progreso desde cualquier dispositivo.</p><button class="btn" data-act="auth">Ingresar o crear cuenta</button></section>';
 }
 function uiAuth(){
- const b=$("#authbtn");if(b)b.textContent=USER?"Salir":"Ingresar";
+ const b=$("#authbtn");if(b)b.textContent=USER?((USER.displayName||USER.email||"").split(/[ @]/)[0]||"Cuenta")+" (salir)":"Ingresar";
  const g=$("#gate");if(g)g.innerHTML=gate();
  const f=$("#fn");if(f&&USER&&!f.value)f.value=USER.displayName||"";
 }
@@ -388,7 +404,7 @@ function initAuth(){
  au.onAuthStateChanged(u=>{
   const antes=USER;USER=u;AR=true;uiAuth();cardSync(!!antes&&!u);
   if(u)loadCloud();
-  else if(antes){P={};PA=false;try{localStorage.removeItem(KEY)}catch(e){}if($("#pdlg").open)$("#pdlg").close()}
+  else if(antes){P={};try{localStorage.removeItem(KEY)}catch(e){}}
   if(M.some(x=>x.s===cur)||cur==="manual"||cur==="foro")view(cur);
   else if(cur==="inicio")homeList();
  });
@@ -397,7 +413,7 @@ function initAuth(){
 function mergeP(c){
  let ch=false;
  const cp=c._perfil;
- if(cp){P._perfil=P._perfil||{};for(const k of["n","a","r","v"]){if(cp[k]&&cp[k]!==P._perfil[k]){P._perfil[k]=cp[k];ch=true}}}
+ if(cp){P._perfil=P._perfil||{};for(const k of["r","v"]){if(cp[k]&&cp[k]!==P._perfil[k]){P._perfil[k]=cp[k];ch=true}}}
  for(const id in c){
   if(id==="_perfil")continue;
   const a=st(id),b=c[id]||{};
@@ -414,19 +430,19 @@ async function loadCloud(){
   const ch=d.exists?mergeP((d.data()||{}).p||{}):false;
   try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}
   saveNow();
-  cardSync();if(ch&&cur)view(cur);else if(cur==="inicio")homeList();askProfile();
+  cardSync();if(ch&&cur)view(cur);else if(cur==="inicio")homeList();
  }catch(e){console.error(e)}
 }
 function cloud(){if(!USER||!fs)return;clearTimeout(ct);ct=setTimeout(saveNow,1200)}
 function saveNow(){
  if(!USER||!fs)return;
- fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:dn().slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+ fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:(USER.displayName||"").slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
 }
 function setMode(m){
  AM=m;
  $("#at").textContent=m==="up"?"Crear cuenta":"Ingresar";
  $("#asub").textContent=m==="up"?"Crear cuenta":"Ingresar";
- $("#anw").hidden=m!=="up";$("#aap").hidden=m!=="up";$("#anr").hidden=m!=="up";$("#anv").hidden=m!=="up";
+ $("#anw").hidden=m!=="up";$("#anr").hidden=m!=="up";$("#anv").hidden=m!=="up";
  $("#ap").autocomplete=m==="up"?"new-password":"current-password";
  document.querySelectorAll(".amode button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
  $("#am").textContent="";
@@ -437,18 +453,18 @@ async function authSubmit(){
  const m=$("#am"),e=$("#ae").value.trim(),p=$("#ap").value,n=$("#an").value.trim();
  if(!au){m.textContent="El ingreso no está disponible todavía.";return}
  if(!e||!p){m.textContent="Completá tu correo y tu contraseña.";return}
- if(AM==="up"&&(!n||!$("#aa").value.trim()||!$("#ar").value.trim()||!$("#av").value.trim())){m.textContent="Completá tu nombre, tu apellido, tu especialidad y tu slogan.";return}
+ if(AM==="up"&&!n){m.textContent="Escribí tu nombre.";return}
  m.textContent="Un momento…";
  try{
-  if(AM==="up"){PA=true;const c=await au.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:(n+" "+$("#aa").value.trim()).slice(0,80)});USER=au.currentUser;P._perfil={n:n.slice(0,40),a:$("#aa").value.trim().slice(0,40),r:$("#ar").value.trim().slice(0,40),v:$("#av").value.trim().slice(0,90)};put()}
+  if(AM==="up"){const c=await au.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:n.slice(0,40)});USER=au.currentUser;P._perfil={r:$("#ar").value.trim().slice(0,40),v:$("#av").value.trim().slice(0,90)};put()}
   else await au.signInWithEmailAndPassword(e,p);
   $("#adlg").close();uiAuth();cardSync();
- }catch(x){console.error(x);if(AM==="up")PA=false;m.textContent=aerr(x)}
+ }catch(x){console.error(x);m.textContent=aerr(x)}
 }
 async function gAuth(){
  const m=$("#am");
  if(!au){m.textContent="El ingreso no está disponible todavía.";return}
- try{const gp=new firebase.auth.GoogleAuthProvider();gp.setCustomParameters({prompt:"select_account"});await au.signInWithPopup(gp);$("#adlg").close()}catch(x){console.error(x);m.textContent=aerr(x)}
+ try{await au.signInWithPopup(new firebase.auth.GoogleAuthProvider());$("#adlg").close()}catch(x){console.error(x);m.textContent=aerr(x)}
 }
 async function resetPw(){
  const m=$("#am"),e=$("#ae").value.trim();
@@ -456,30 +472,15 @@ async function resetPw(){
  if(!e){m.textContent="Escribí tu correo arriba y tocá de nuevo.";return}
  try{await au.sendPasswordResetEmail(e);m.textContent="Te enviamos un correo para restablecer tu contraseña."}catch(x){m.textContent=aerr(x)}
 }
-function askProfile(){
- const p=P._perfil||{};
- if(!USER||PA||(p.n&&p.a&&p.r&&p.v))return;
- PA=true;
- $("#pn").value=p.n||"";$("#pa").value=p.a||"";$("#pr").value=p.r||"";$("#pv").value=p.v||"";$("#pm").textContent="";
- if($("#adlg").open)$("#adlg").close();
- $("#pdlg").showModal();
+function cardSync(clear){
+ const p=P._perfil||{},n=$("#in1"),r=$("#in2"),v=$("#in3");
+ if(USER){n.value=USER.displayName||(USER.email||"").split("@")[0]||"";r.value=p.r||"";v.value=p.v||""}
+ else if(clear){n.value="";r.value="";v.value=""}
+ n.disabled=!!USER;
+ $("#chint").textContent=USER?"Tu tarjeta se completa con los datos de tu cuenta. Podés editar tu especialidad y tu slogan.":"Probalo: escribí y mirá cómo se arma tu tarjeta de marca. Si ingresás, se completa con tus datos.";
+ bind();
 }
-$("#pdlg").addEventListener("cancel",e=>e.preventDefault());
-$("#pdlg").addEventListener("close",()=>{const p=P._perfil||{};if(USER&&!(p.n&&p.a&&p.r&&p.v))setTimeout(()=>{if(!$("#pdlg").open)$("#pdlg").showModal()},0)});
-$("#pform").addEventListener("submit",e=>{
- e.preventDefault();
- const n=$("#pn").value.trim().slice(0,40),a=$("#pa").value.trim().slice(0,40),r=$("#pr").value.trim().slice(0,40),v=$("#pv").value.trim().slice(0,90);
- if(!n||!a||!r||!v){$("#pm").textContent="Completá tu nombre, tu apellido, tu especialidad y tu slogan.";return}
- P._perfil={n,a,r,v};put();cardSync();$("#pdlg").close();
-});
-function cardSync(){
- const p=P._perfil||{},n=USER?dn():"";
- $("#cn").textContent=n||"Tu nombre";
- $("#cr").textContent=(USER&&p.r)||"Tu especialidad";
- $("#cv").textContent=USER&&p.v?"“"+p.v+"”":"“Mi slogan es...”";
- $("#ini").textContent=n?n.split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join(""):"?";
- $("#chint").textContent=USER?"Tu tarjeta se arma con los datos de tu registro.":"Ingresá o creá tu cuenta para armar tu tarjeta de marca.";
-}
+["#in2","#in3"].forEach(sel=>$(sel).addEventListener("input",()=>{if(!USER)return;P._perfil={r:$("#in2").value.trim().slice(0,40),v:$("#in3").value.trim().slice(0,90)};put()}));
 $("#aform").addEventListener("submit",e=>{e.preventDefault();authSubmit()});
 $("#adlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
 
@@ -544,9 +545,17 @@ function faq(){
 }
 
 // Tarjeta de marca en vivo
+function bind(){
+ const n=$("#in1").value.trim(),r=$("#in2").value.trim(),v=$("#in3").value.trim();
+ $("#cn").textContent=n||"Tu nombre";
+ $("#cr").textContent=r||"Tu especialidad";
+ $("#cv").textContent=v?"“"+v+"”":"“Mi slogan es...”";
+ $("#ini").textContent=n?n.split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join(""):"?";
+}
+["#in1","#in2","#in3"].forEach(s=>$(s).addEventListener("input",bind));
 
 const h0=location.hash.slice(1);
-view(NAV.some(n=>n[0]===h0)?h0:"inicio");cardSync();
+view(NAV.some(n=>n[0]===h0)?h0:"inicio");bind();
 </script>
 </body>
 </html>
