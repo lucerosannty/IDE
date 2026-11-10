@@ -445,7 +445,7 @@ USER=u && (u.emailVerified || u.providerData.some(p=>p.providerId==="google.com"
 AR=true;
 uiAuth();
 cardSync(!!antes&&!USER);
-  if(u)loadCloud();
+  if(USER)loadCloud();
   else if(antes){P={};try{localStorage.removeItem(KEY)}catch(e){}}
   if(M.some(x=>x.s===cur)||cur==="manual"||cur==="foro")view(cur);
   else if(cur==="inicio")homeList();
