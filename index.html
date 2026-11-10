@@ -603,6 +603,13 @@ if(!$("#av").value.trim()){
 
       await au.signOut();
 
+      alert(
+  "✅ ¡Cuenta creada exitosamente!\n\n" +
+  "📩 Te enviamos un correo de verificación.\n\n" +
+  "Revisá tu bandeja de entrada o spam y hacé clic en el enlace para activar tu cuenta.\n\n" +
+  "⚠️ No podrás ingresar a IDE hasta verificar tu correo."
+);
+
       m.textContent="Cuenta creada. Revisá tu correo y verificá tu dirección antes de ingresar.";
       setMode("in");
       $("#am").textContent="Cuenta creada. Revisá tu correo y verificá tu dirección antes de ingresar.";
@@ -614,12 +621,18 @@ if(!$("#av").value.trim()){
       const c=await au.signInWithEmailAndPassword(e,p);
 
       await c.user.reload();
+if(!c.user.emailVerified){
+  await au.signOut();
 
-      if(!c.user.emailVerified){
-        await au.signOut();
-        m.textContent="Tenés que verificar tu correo electrónico antes de ingresar. Revisá tu bandeja de entrada o spam.";
-        return;
-      }
+  alert(
+    "⚠️ CORREO SIN VERIFICAR\n\n" +
+    "Para ingresar a IDE, primero tenés que verificar tu dirección de correo electrónico.\n\n" +
+    "📩 Revisá tu bandeja de entrada o spam y abrí el enlace que te enviamos."
+  );
+
+  m.textContent="Tenés que verificar tu correo electrónico antes de ingresar.";
+  return;
+}
     }
 
     $("#adlg").close();
