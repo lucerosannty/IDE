@@ -192,8 +192,8 @@ input:disabled{opacity:.75;cursor:not-allowed}
  <div class="amode"><button type="button" class="on" data-act="mode" data-m="in">Ingresar</button><button type="button" data-act="mode" data-m="up">Crear cuenta</button></div>
  <form id="aform">
   <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="name"></label>
-  <label class="fld" id="anr" hidden>Especialidad (opcional)<input type="text" id="ar" maxlength="40"></label>
-  <label class="fld" id="anv" hidden>Slogan (opcional)<input type="text" id="av" maxlength="90" placeholder="Mi slogan es..."></label>
+  <label class="fld" id="anr" hidden>Especialidad<input type="text" id="ar" maxlength="40"></label>
+  <label class="fld" id="anv" hidden>Slogan<input type="text" id="av" maxlength="90" placeholder="Mi slogan es..."></label>
   <label class="fld">Correo<input type="email" id="ae" autocomplete="email"></label>
   <label class="fld">Contraseña<input type="password" id="ap" autocomplete="current-password" minlength="6"></label>
   <p id="am" class="msg" role="status"></p>
@@ -203,6 +203,17 @@ input:disabled{opacity:.75;cursor:not-allowed}
  <p class="sep"><button type="button" class="lnkb" style="color:var(--br)" data-act="reset">Olvidé mi contraseña</button></p>
  <p class="hint">Guardamos tu nombre, tu correo y tus respuestas del curso para que puedas retomarlo desde cualquier dispositivo.</p>
  <button class="btn ghost sm" type="button" data-act="shut2" style="margin-top:12px">Cerrar</button>
+</div></dialog>
+<dialog id="pdlg" aria-labelledby="pt" closedby="none"><div class="dc">
+ <h2 id="pt">Completá tu tarjeta de marca</h2>
+ <p>Para usar el curso, completá tu especialidad y tu slogan. Con eso armamos tu tarjeta de marca: la ves en el inicio y la podés cambiar cuando quieras.</p>
+ <form id="pform">
+  <label class="fld">Especialidad<input type="text" id="pr" maxlength="40"></label>
+  <label class="fld">Slogan<input type="text" id="pv" maxlength="90" placeholder="Mi slogan es..."></label>
+  <p id="pm" class="msg" role="status"></p>
+  <button class="btn" type="submit">Guardar</button>
+  <button class="lnkb" type="button" data-act="out" style="color:var(--mu);margin-left:12px">Cerrar sesión</button>
+ </form>
 </div></dialog>
 </div>
 
@@ -343,6 +354,7 @@ document.addEventListener("click",e=>{
  else if(k==="google")gAuth();
  else if(k==="reset")resetPw();
  else if(k==="shut2")$("#adlg").close();
+ else if(k==="out"){if(au)au.signOut()}
  else if(k==="copy"){
   const t=M.map(x=>`${x.id}. ${x.n.toUpperCase()}\n`+filled(x).map(([k2,l])=>`${l}\n${val(x,k2)}`).join("\n\n")).join("\n\n");
   const msg=$("#cm");
@@ -356,7 +368,7 @@ document.addEventListener("input",e=>{
 addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(h!==cur&&NAV.some(n=>n[0]===h))view(h)});
 
 // Cuentas de usuario (Firebase Authentication) y guardado de respuestas en la nube
-let USER=null,au=null,AM="in",ct=null,AR=false;
+let USER=null,au=null,AM="in",ct=null,AR=false,PA=false;
 const AE={"auth/invalid-credential":"Correo o contraseña incorrectos.","auth/wrong-password":"Correo o contraseña incorrectos.","auth/user-not-found":"No hay una cuenta con ese correo.","auth/email-already-in-use":"Ese correo ya tiene una cuenta. Probá ingresar.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/invalid-email":"El correo no es válido.","auth/popup-closed-by-user":"Cerraste la ventana de Google antes de terminar.","auth/unauthorized-domain":"Este sitio no está autorizado en Firebase (Authentication, Configuración, Dominios autorizados).","auth/operation-not-allowed":"Ese método de ingreso no está activado en Firebase.","auth/too-many-requests":"Demasiados intentos. Probá más tarde.","auth/network-request-failed":"Sin conexión. Revisá tu internet."};
 const aerr=x=>AE[x&&x.code]||"No se pudo completar ("+((x&&x.code)||"error")+").";
 const gate=()=>USER?"":'<p class="msg">Ingresá para guardar tus respuestas en tu cuenta y retomarlas desde cualquier dispositivo. <button class="lnkb" style="color:var(--br)" data-act="auth">Ingresar</button></p>';
@@ -375,7 +387,7 @@ function initAuth(){
  au.onAuthStateChanged(u=>{
   const antes=USER;USER=u;AR=true;uiAuth();cardSync(!!antes&&!u);
   if(u)loadCloud();
-  else if(antes){P={};try{localStorage.removeItem(KEY)}catch(e){}}
+  else if(antes){P={};PA=false;try{localStorage.removeItem(KEY)}catch(e){}if($("#pdlg").open)$("#pdlg").close()}
   if(M.some(x=>x.s===cur)||cur==="manual"||cur==="foro")view(cur);
   else if(cur==="inicio")homeList();
  });
@@ -401,7 +413,7 @@ async function loadCloud(){
   const ch=d.exists?mergeP((d.data()||{}).p||{}):false;
   try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}
   saveNow();
-  cardSync();if(ch&&cur)view(cur);else if(cur==="inicio")homeList();
+  cardSync();if(ch&&cur)view(cur);else if(cur==="inicio")homeList();askProfile();
  }catch(e){console.error(e)}
 }
 function cloud(){if(!USER||!fs)return;clearTimeout(ct);ct=setTimeout(saveNow,1200)}
@@ -424,13 +436,13 @@ async function authSubmit(){
  const m=$("#am"),e=$("#ae").value.trim(),p=$("#ap").value,n=$("#an").value.trim();
  if(!au){m.textContent="El ingreso no está disponible todavía.";return}
  if(!e||!p){m.textContent="Completá tu correo y tu contraseña.";return}
- if(AM==="up"&&!n){m.textContent="Escribí tu nombre.";return}
+ if(AM==="up"&&(!n||!$("#ar").value.trim()||!$("#av").value.trim())){m.textContent="Completá tu nombre, tu especialidad y tu slogan.";return}
  m.textContent="Un momento…";
  try{
-  if(AM==="up"){const c=await au.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:n.slice(0,40)});USER=au.currentUser;P._perfil={r:$("#ar").value.trim().slice(0,40),v:$("#av").value.trim().slice(0,90)};put()}
+  if(AM==="up"){PA=true;const c=await au.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:n.slice(0,40)});USER=au.currentUser;P._perfil={r:$("#ar").value.trim().slice(0,40),v:$("#av").value.trim().slice(0,90)};put()}
   else await au.signInWithEmailAndPassword(e,p);
   $("#adlg").close();uiAuth();cardSync();
- }catch(x){console.error(x);m.textContent=aerr(x)}
+ }catch(x){console.error(x);if(AM==="up")PA=false;m.textContent=aerr(x)}
 }
 async function gAuth(){
  const m=$("#am");
@@ -443,6 +455,22 @@ async function resetPw(){
  if(!e){m.textContent="Escribí tu correo arriba y tocá de nuevo.";return}
  try{await au.sendPasswordResetEmail(e);m.textContent="Te enviamos un correo para restablecer tu contraseña."}catch(x){m.textContent=aerr(x)}
 }
+function askProfile(){
+ const p=P._perfil||{};
+ if(!USER||PA||(p.r&&p.v))return;
+ PA=true;
+ $("#pr").value=p.r||"";$("#pv").value=p.v||"";$("#pm").textContent="";
+ if($("#adlg").open)$("#adlg").close();
+ $("#pdlg").showModal();
+}
+$("#pdlg").addEventListener("cancel",e=>e.preventDefault());
+$("#pdlg").addEventListener("close",()=>{const p=P._perfil||{};if(USER&&!(p.r&&p.v))setTimeout(()=>{if(!$("#pdlg").open)$("#pdlg").showModal()},0)});
+$("#pform").addEventListener("submit",e=>{
+ e.preventDefault();
+ const r=$("#pr").value.trim().slice(0,40),v=$("#pv").value.trim().slice(0,90);
+ if(!r||!v){$("#pm").textContent="Completá tu especialidad y tu slogan.";return}
+ P._perfil={r,v};put();cardSync();$("#pdlg").close();
+});
 function cardSync(clear){
  const p=P._perfil||{},n=$("#in1"),r=$("#in2"),v=$("#in3");
  if(USER){n.value=USER.displayName||(USER.email||"").split("@")[0]||"";r.value=p.r||"";v.value=p.v||""}
