@@ -311,7 +311,14 @@ addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(h!==cur&&NA
 // Foro de la comunidad (Firebase Firestore)
 // 1) Creá un proyecto en https://console.firebase.google.com y activá Firestore.
 // 2) Registrá una app web y pegá acá su configuración (se puede mostrar en público).
-const FB={apiKey:"TU_API_KEY",authDomain:"TU_PROYECTO.firebaseapp.com",projectId:"TU_PROYECTO"};
+const FB={
+  apiKey:"AIzaSyCr-8MeT06bd7ys60jyNbkpfzG-9PHaunY",
+  authDomain:"ide-1993.firebaseapp.com",
+  projectId:"ide-1993",
+  storageBucket:"ide-1993.firebasestorage.app",
+  messagingSenderId:"1034732296107",
+  appId:"1:1034732296107:web:984499482a5669a641a4ee"
+};
 const TOP=["General",...M.map(m=>m.n)];
 let fs=null,FD=[],FE="",FT="Todos";
 function initForum(){
