@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>IDE</title>
+<title>IDE — Identidad, Desarrollo y Estrategia</title>
 <link rel="icon" href="logo.png">
 <style>
 :root{--bg:#f6f7fb;--sf:#fff;--ink:#141a33;--mu:#566080;--ln:#dde1ee;--br:#1f3a93;--bi:#fff;--ac:#f2b705;--so:#e8ecfa;--ok:#1b7f55;--no:#b83232;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -44,7 +44,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .idcard .r,.hint,.msg,.side small{color:var(--mu)}
 .idcard p{grid-column:1/-1;margin:10px 0 0;font-style:italic}
 .hint{font-size:.9rem;margin:0}
-input[type=text]{width:100%;border:1px solid var(--ln);border-radius:10px;padding:10px 12px;background:var(--sf);color:var(--ink);font:inherit}
+input[type=text],input[type=email],input[type=password]{width:100%;border:1px solid var(--ln);border-radius:10px;padding:10px 12px;background:var(--sf);color:var(--ink);font:inherit}
 .jr{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);padding:26px 0;margin-bottom:48px}
 .jr p{color:var(--mu);margin:0}
 .jr h3{color:var(--br)}
@@ -109,6 +109,12 @@ dialog::backdrop{background:rgba(10,14,40,.55)}
 .qa summary::after{content:"+";position:absolute;right:6px;top:10px;font-size:1.5rem;color:var(--br)}
 .qa[open] summary::after{content:"\2212"}
 .qa p{color:var(--mu);margin:0 0 16px}
+.fld input{margin-top:8px}
+.abtn{margin-left:auto;align-self:center;background:var(--br);color:var(--bi);border:0;border-radius:99px;padding:6px 16px;font:inherit;font-weight:700;white-space:nowrap;cursor:pointer}
+.amode{display:flex;gap:8px;margin-bottom:16px}
+.amode button{border:1px solid var(--ln);background:transparent;color:var(--ink);border-radius:99px;padding:6px 16px;font:inherit;font-weight:600;cursor:pointer}
+.amode button.on{background:var(--br);color:var(--bi);border-color:var(--br)}
+.sep{margin:14px 0 8px}
 @media (max-width:760px){.frow{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.mrow{grid-template-columns:40px 1fr}.side{grid-column:1/-1}}
 </style>
 </head>
@@ -180,10 +186,26 @@ dialog::backdrop{background:rgba(10,14,40,.55)}
  </ul>
  <button class="btn" data-act="shut">Cerrar</button>
 </div></dialog>
+<dialog id="adlg" aria-labelledby="at"><div class="dc">
+ <h2 id="at">Ingresar</h2>
+ <div class="amode"><button type="button" class="on" data-act="mode" data-m="in">Ingresar</button><button type="button" data-act="mode" data-m="up">Crear cuenta</button></div>
+ <form id="aform">
+  <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="name"></label>
+  <label class="fld">Correo<input type="email" id="ae" autocomplete="email"></label>
+  <label class="fld">Contraseña<input type="password" id="ap" autocomplete="current-password" minlength="6"></label>
+  <p id="am" class="msg" role="status"></p>
+  <button class="btn" type="submit" id="asub">Ingresar</button>
+  <button class="btn ghost" type="button" data-act="google">Continuar con Google</button>
+ </form>
+ <p class="sep"><button type="button" class="lnkb" style="color:var(--br)" data-act="reset">Olvidé mi contraseña</button></p>
+ <p class="hint">Guardamos tu nombre, tu correo y tus respuestas del curso para que puedas retomarlo desde cualquier dispositivo.</p>
+ <button class="btn ghost sm" type="button" data-act="shut2" style="margin-top:12px">Cerrar</button>
+</div></dialog>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 // Para sumar tus videos, pegá el enlace de inserción (embed) en el campo "url" de cada módulo.
 const M=[
@@ -244,7 +266,7 @@ const M=[
 const KEY="ide-progreso-v2",$=s=>document.querySelector(s);
 let P={},cur="";
 try{P=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){P={}}
-const put=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}};
+const put=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}cloud()};
 const st=id=>{const s=P[id]||(P[id]={});s.f=s.f||{};s.q=s.q||0;return s};
 const E=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const val=(m,k)=>(st(m.id).f[k]||"").trim();
@@ -254,7 +276,7 @@ const pct=m=>steps(m).filter(Boolean).length*25;
 const chips=m=>steps(m).map((d,i)=>`<span class="chip${d?" on":""}">${d?"✓ ":""}${SN[i]}</span>`).join("");
 const fld=(m,k,l,r)=>`<label class="fld">${l}<textarea data-m="${m.id}" data-k="${k}" rows="${r||3}" placeholder="Escribí tu respuesta"></textarea></label>`;
 const NAV=[["inicio","Inicio"],...M.map(m=>[m.s,m.id+" "+m.n]),["foro","Foro"],["faq","Preguntas frecuentes"],["manual","Mi manual"]];
-$("#nav").innerHTML=NAV.map(([k,n])=>`<a href="#${k}" data-go="${k}" role="tab">${n}</a>`).join("");
+$("#nav").innerHTML=NAV.map(([k,n])=>`<a href="#${k}" data-go="${k}" role="tab">${n}</a>`).join("")+'<button class="abtn" data-act="auth" id="authbtn">Ingresar</button>';
 
 function homeList(){
  const t=Math.round(M.reduce((a,m)=>a+pct(m),0)/M.length);
@@ -263,7 +285,7 @@ function homeList(){
 
 function mod(m){
  const s=st(m.id),i=M.indexOf(m),pv=M[i-1],nx=M[i+1];
- return `<section class="mh"><h1>Módulo ${m.id}: ${m.n}</h1><p class="q">${m.q}</p><p>${m.o}</p><div class="chips" id="chips">${chips(m)}</div><div class="bar"><i id="mb" style="width:${pct(m)}%"></i></div></section>
+ return `<section class="mh"><h1>Módulo ${m.id}: ${m.n}</h1><p class="q">${m.q}</p><p>${m.o}</p><div id="gate">${gate()}</div><div class="chips" id="chips">${chips(m)}</div><div class="bar"><i id="mb" style="width:${pct(m)}%"></i></div></section>
  <div class="video">${m.url?`<iframe src="${m.url}" title="${m.vt}" allowfullscreen></iframe>`:`<div class="ph"><span class="play">▶</span><b>${m.vt}</b><small>Acá va el video de la clase. Pegá su enlace de inserción en el campo url del módulo.</small></div>`}</div>
  <button class="btn${s.v?" ok":""}" id="vb" data-act="seen">${s.v?"✓ Video visto":"Marcar video como visto"}</button>
  ${m.caps.map(c=>`<section class="cap"><div class="ct"><h2>${c.t}</h2><span class="tm">Minuto ${c.tm}</span></div><p>${c.i}</p>${c.f.map(([k,l])=>fld(m,k,l,3)).join("")}</section>`).join("")}
@@ -289,7 +311,7 @@ function view(r){
   if(m)document.querySelectorAll("#app textarea").forEach(t=>t.value=st(m.id).f[t.dataset.k]||"")}
  window.scrollTo(0,0);
 }
-function go(r){try{history.replaceState(null,"","#"+r)}catch(e){}view(r)}
+function go(r){try{history.replaceState(null,"",r==="inicio"?location.pathname+location.search:"#"+r)}catch(e){}view(r)}
 
 function grade(m){
  const s=st(m.id);let ok=0,miss=0;
@@ -312,6 +334,11 @@ document.addEventListener("click",e=>{
  else if(k==="post")post();
  else if(k==="about")$("#dlg").showModal();
  else if(k==="shut")$("#dlg").close();
+ else if(k==="auth")authBtn();
+ else if(k==="mode")setMode(a.dataset.m);
+ else if(k==="google")gAuth();
+ else if(k==="reset")resetPw();
+ else if(k==="shut2")$("#adlg").close();
  else if(k==="copy"){
   const t=M.map(x=>`${x.id}. ${x.n.toUpperCase()}\n`+filled(x).map(([k2,l])=>`${l}\n${val(x,k2)}`).join("\n\n")).join("\n\n");
   const msg=$("#cm");
@@ -323,6 +350,86 @@ document.addEventListener("input",e=>{
  const m=M.find(x=>x.id==t.dataset.m);st(m.id).f[t.dataset.k]=t.value;put();upd(m);
 });
 addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(h!==cur&&NAV.some(n=>n[0]===h))view(h)});
+
+// Cuentas de usuario (Firebase Authentication) y guardado de respuestas en la nube
+let USER=null,au=null,AM="in",ct=null;
+const AE={"auth/invalid-credential":"Correo o contraseña incorrectos.","auth/wrong-password":"Correo o contraseña incorrectos.","auth/user-not-found":"No hay una cuenta con ese correo.","auth/email-already-in-use":"Ese correo ya tiene una cuenta. Probá ingresar.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/invalid-email":"El correo no es válido.","auth/popup-closed-by-user":"Cerraste la ventana de Google antes de terminar.","auth/unauthorized-domain":"Este sitio no está autorizado en Firebase (Authentication, Configuración, Dominios autorizados).","auth/operation-not-allowed":"Ese método de ingreso no está activado en Firebase.","auth/too-many-requests":"Demasiados intentos. Probá más tarde.","auth/network-request-failed":"Sin conexión. Revisá tu internet."};
+const aerr=x=>AE[x&&x.code]||"No se pudo completar ("+((x&&x.code)||"error")+").";
+const gate=()=>USER?"":'<p class="msg">Ingresá para guardar tus respuestas en tu cuenta y retomarlas desde cualquier dispositivo. <button class="lnkb" style="color:var(--br)" data-act="auth">Ingresar</button></p>';
+function uiAuth(){
+ const b=$("#authbtn");if(b)b.textContent=USER?((USER.displayName||USER.email||"").split(/[ @]/)[0]||"Cuenta")+" (salir)":"Ingresar";
+ const g=$("#gate");if(g)g.innerHTML=gate();
+ const f=$("#fn");if(f&&USER&&!f.value)f.value=USER.displayName||"";
+}
+function initAuth(){
+ au=firebase.auth();
+ au.onAuthStateChanged(u=>{
+  const antes=USER;USER=u;uiAuth();
+  if(u)loadCloud();
+  else if(antes){P={};try{localStorage.removeItem(KEY)}catch(e){}view(cur)}
+ });
+}
+function mergeP(c){
+ let ch=false;
+ for(const id in c){
+  const a=st(id),b=c[id]||{};
+  if(b.v&&!a.v){a.v=true;ch=true}
+  if((b.q||0)>a.q){a.q=b.q;ch=true}
+  const bf=b.f||{};
+  for(const k in bf){const v=bf[k]||"";if(v.trim()&&v!==a.f[k]){a.f[k]=v;ch=true}}
+ }
+ return ch;
+}
+async function loadCloud(){
+ try{
+  const d=await fs.collection("usuarios").doc(USER.uid).get();
+  const ch=d.exists?mergeP((d.data()||{}).p||{}):false;
+  try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}
+  saveNow();
+  if(ch&&cur)view(cur);else if(cur==="inicio")homeList();
+ }catch(e){console.error(e)}
+}
+function cloud(){if(!USER||!fs)return;clearTimeout(ct);ct=setTimeout(saveNow,1200)}
+function saveNow(){
+ if(!USER||!fs)return;
+ fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:(USER.displayName||"").slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+}
+function setMode(m){
+ AM=m;
+ $("#at").textContent=m==="up"?"Crear cuenta":"Ingresar";
+ $("#asub").textContent=m==="up"?"Crear cuenta":"Ingresar";
+ $("#anw").hidden=m!=="up";
+ $("#ap").autocomplete=m==="up"?"new-password":"current-password";
+ document.querySelectorAll(".amode button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+ $("#am").textContent="";
+}
+function openAuth(){setMode("in");$("#adlg").showModal()}
+function authBtn(){if(USER&&au)au.signOut();else openAuth()}
+async function authSubmit(){
+ const m=$("#am"),e=$("#ae").value.trim(),p=$("#ap").value,n=$("#an").value.trim();
+ if(!au){m.textContent="El ingreso no está disponible todavía.";return}
+ if(!e||!p){m.textContent="Completá tu correo y tu contraseña.";return}
+ if(AM==="up"&&!n){m.textContent="Escribí tu nombre.";return}
+ m.textContent="Un momento…";
+ try{
+  if(AM==="up"){const c=await au.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:n.slice(0,40)});USER=au.currentUser;saveNow()}
+  else await au.signInWithEmailAndPassword(e,p);
+  $("#adlg").close();uiAuth();
+ }catch(x){console.error(x);m.textContent=aerr(x)}
+}
+async function gAuth(){
+ const m=$("#am");
+ if(!au){m.textContent="El ingreso no está disponible todavía.";return}
+ try{await au.signInWithPopup(new firebase.auth.GoogleAuthProvider());$("#adlg").close()}catch(x){console.error(x);m.textContent=aerr(x)}
+}
+async function resetPw(){
+ const m=$("#am"),e=$("#ae").value.trim();
+ if(!au)return;
+ if(!e){m.textContent="Escribí tu correo arriba y tocá de nuevo.";return}
+ try{await au.sendPasswordResetEmail(e);m.textContent="Te enviamos un correo para restablecer tu contraseña."}catch(x){m.textContent=aerr(x)}
+}
+$("#aform").addEventListener("submit",e=>{e.preventDefault();authSubmit()});
+$("#adlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
 
 // Foro de la comunidad (Firebase Firestore)
 // 1) Creá un proyecto en https://console.firebase.google.com y activá Firestore.
@@ -341,13 +448,14 @@ function initForum(){
   if(FB.projectId.startsWith("TU_")){FE="cfg";rf();return}
   firebase.initializeApp(FB);fs=firebase.firestore();
   fs.settings({experimentalAutoDetectLongPolling:true});
+  initAuth();
   fs.collection("foro").orderBy("t","desc").limit(200).onSnapshot(s=>{FD=s.docs.map(d=>d.data());rf()},e=>{FE="err";FC=(e&&e.code)||"";console.error(e);rf()});
  }catch(e){FE="err";FC=(e&&e.code)||"";console.error(e);rf()}
 }
 function foro(){
  return `<section class="mh"><h1>Foro de la comunidad</h1><p class="lead">Compartí tu opinión, una duda o lo que aprendiste en el curso. Cualquier persona puede leer y participar.</p></section>
  <section class="cap"><h2>Dejá tu opinión</h2><p id="fmsg" class="msg"></p>
- <input type="text" id="fn" placeholder="Tu nombre" aria-label="Tu nombre" maxlength="30" style="margin-bottom:12px">
+ <input type="text" id="fn" placeholder="Tu nombre" aria-label="Tu nombre" maxlength="30" value="${E(USER&&USER.displayName||"")}" style="margin-bottom:12px">
  <label class="fld">Tu opinión<textarea id="fx" rows="4" maxlength="600" placeholder="Escribí tu opinión (hasta 600 caracteres)"></textarea></label>
  <button class="btn" data-act="post">Publicar</button> <span id="fs" class="msg"></span></section>
  <section class="cap"><h2>Opiniones</h2><div id="fl"></div></section>`;
