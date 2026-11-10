@@ -335,8 +335,7 @@ const FB={
   messagingSenderId:"1034732296107",
   appId:"1:1034732296107:web:984499482a5669a641a4ee"
 };
-const TOP=["General",...M.map(m=>m.n)];
-let fs=null,FD=[],FE="",FC="",FT="Todos";
+let fs=null,FD=[],FE="",FC="";
 function initForum(){
  try{
   if(FB.projectId.startsWith("TU_")){FE="cfg";rf();return}
@@ -346,18 +345,18 @@ function initForum(){
  }catch(e){FE="err";FC=(e&&e.code)||"";console.error(e);rf()}
 }
 function foro(){
- return `<section class="mh"><h1>Foro de la comunidad</h1><p class="lead">Compartí tu opinión, una duda o lo que aprendiste en cada módulo. Cualquier persona puede leer y participar.</p></section>
+ return `<section class="mh"><h1>Foro de la comunidad</h1><p class="lead">Compartí tu opinión, una duda o lo que aprendiste en el curso. Cualquier persona puede leer y participar.</p></section>
  <section class="cap"><h2>Dejá tu opinión</h2><p id="fmsg" class="msg"></p>
- <div class="frow"><input type="text" id="fn" placeholder="Tu nombre" aria-label="Tu nombre" maxlength="30"><select id="ft" aria-label="Tema">${TOP.map(t=>`<option>${t}</option>`).join("")}</select></div>
+ <input type="text" id="fn" placeholder="Tu nombre" aria-label="Tu nombre" maxlength="30" style="margin-bottom:12px">
  <label class="fld">Tu opinión<textarea id="fx" rows="4" maxlength="600" placeholder="Escribí tu opinión (hasta 600 caracteres)"></textarea></label>
  <button class="btn" data-act="post">Publicar</button> <span id="fs" class="msg"></span></section>
- <section class="cap"><div class="ct"><h2>Opiniones</h2><select id="ff" aria-label="Filtrar por tema">${["Todos",...TOP].map(t=>`<option${t===FT?" selected":""}>${t}</option>`).join("")}</select></div><div id="fl"></div></section>`;
+ <section class="cap"><h2>Opiniones</h2><div id="fl"></div></section>`;
 }
 function rf(){
  const l=$("#fl");if(!l)return;
  $("#fmsg").textContent=FE==="cfg"?"Falta conectar el foro: pegá tu configuración de Firebase en la constante FB del código.":FE?"No se pudo cargar el foro"+(FC?" ("+FC+")":"")+". Recargá la página.":"";
- const L=FD.filter(p=>FT==="Todos"||p.c===FT);
- l.innerHTML=L.length?L.map(p=>`<article class="fp"><div class="fm"><b>${E(p.n)}</b><span class="tg">${E(p.c)}</span><span>${(p.t&&p.t.toDate?p.t.toDate():new Date()).toLocaleDateString("es-AR",{day:"numeric",month:"short",year:"numeric"})}</span></div><p class="pre">${E(p.x)}</p></article>`).join(""):`<p class="msg">Todavía no hay opiniones${FT==="Todos"?"":" en este tema"}. ¡Sé la primera persona en escribir!</p>`;
+ const L=FD;
+ l.innerHTML=L.length?L.map(p=>`<article class="fp"><div class="fm"><b>${E(p.n)}</b><span>${(p.t&&p.t.toDate?p.t.toDate():new Date()).toLocaleDateString("es-AR",{day:"numeric",month:"short",year:"numeric"})}</span></div><p class="pre">${E(p.x)}</p></article>`).join(""):`<p class="msg">Todavía no hay opiniones. ¡Sé la primera persona en escribir!</p>`;
 }
 async function post(){
  const s=$("#fs"),n=$("#fn").value.trim(),x=$("#fx").value.trim();
@@ -366,14 +365,13 @@ async function post(){
  s.textContent="Publicando…";
  const espera=new Promise((_,no)=>setTimeout(()=>no({code:"timeout"}),10000));
  try{
-  await Promise.race([fs.collection("foro").add({n:n.slice(0,30),c:$("#ft").value,x:x.slice(0,600),t:firebase.firestore.FieldValue.serverTimestamp()}),espera]);
+  await Promise.race([fs.collection("foro").add({n:n.slice(0,30),c:"General",x:x.slice(0,600),t:firebase.firestore.FieldValue.serverTimestamp()}),espera]);
   $("#fx").value="";s.textContent="¡Publicado!";
  }catch(e){
   console.error(e);
   s.textContent=e.code==="permission-denied"?"Firebase rechazó la publicación. Revisá que las reglas estén publicadas.":e.code==="timeout"?"Firebase no responde. Puede estar bloqueado por un bloqueador de anuncios o por la conexión.":"No se pudo publicar ("+(e.code||"error")+").";
  }
 }
-document.addEventListener("change",e=>{if(e.target.id==="ff"){FT=e.target.value;rf()}});
 initForum();
 
 $("#dlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
