@@ -379,7 +379,7 @@ function lock(){
  return '<section class="cap ent"><h2>Ingresá para acceder al curso</h2><p>El curso es solo para personas registradas. Con tu cuenta podés ver los módulos, completar las actividades y retomar tu progreso desde cualquier dispositivo.</p><button class="btn" data-act="auth">Ingresar o crear cuenta</button></section>';
 }
 function uiAuth(){
- const b=$("#authbtn");if(b)b.textContent=USER?"(salir)":"Ingresar";
+ const b=$("#authbtn");if(b)b.textContent=USER?"Salir":"Ingresar";
  const g=$("#gate");if(g)g.innerHTML=gate();
  const f=$("#fn");if(f&&USER&&!f.value)f.value=USER.displayName||"";
 }
