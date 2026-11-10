@@ -191,7 +191,7 @@ input:disabled{opacity:.75;cursor:not-allowed}
  <h2 id="at">Ingresar</h2>
  <div class="amode"><button type="button" class="on" data-act="mode" data-m="in">Ingresar</button><button type="button" data-act="mode" data-m="up">Crear cuenta</button></div>
  <form id="aform">
-  <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="name"></label>
+  <label class="fld" id="anw" hidden>¿Cómo querés que te llamemos?<input type="text" id="an" maxlength="40" autocomplete="name"></label>
   <label class="fld" id="anr" hidden>Especialidad<input type="text" id="ar" maxlength="40"></label>
   <label class="fld" id="anv" hidden>Slogan<input type="text" id="av" maxlength="90" placeholder="Mi slogan es..."></label>
   <label class="fld">Correo<input type="email" id="ae" autocomplete="email"></label>
@@ -206,8 +206,9 @@ input:disabled{opacity:.75;cursor:not-allowed}
 </div></dialog>
 <dialog id="pdlg" aria-labelledby="pt" closedby="none"><div class="dc">
  <h2 id="pt">Completá tu tarjeta de marca</h2>
- <p>Para usar el curso, completá tu especialidad y tu slogan. Con eso armamos tu tarjeta de marca: la ves en el inicio y la podés cambiar cuando quieras.</p>
+ <p>Para usar el curso, completá cómo querés que te llamemos, tu especialidad y tu slogan. Con eso armamos tu tarjeta de marca: la ves en el inicio y la podés cambiar cuando quieras.</p>
  <form id="pform">
+  <label class="fld">¿Cómo querés que te llamemos?<input type="text" id="pn" maxlength="40" autocomplete="off"></label>
   <label class="fld">Especialidad<input type="text" id="pr" maxlength="40"></label>
   <label class="fld">Slogan<input type="text" id="pv" maxlength="90" placeholder="Mi slogan es..."></label>
   <p id="pm" class="msg" role="status"></p>
@@ -372,13 +373,14 @@ let USER=null,au=null,AM="in",ct=null,AR=false,PA=false;
 const AE={"auth/invalid-credential":"Correo o contraseña incorrectos.","auth/wrong-password":"Correo o contraseña incorrectos.","auth/user-not-found":"No hay una cuenta con ese correo.","auth/email-already-in-use":"Ese correo ya tiene una cuenta. Probá ingresar.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/invalid-email":"El correo no es válido.","auth/popup-closed-by-user":"Cerraste la ventana de Google antes de terminar.","auth/unauthorized-domain":"Este sitio no está autorizado en Firebase (Authentication, Configuración, Dominios autorizados).","auth/operation-not-allowed":"Ese método de ingreso no está activado en Firebase.","auth/too-many-requests":"Demasiados intentos. Probá más tarde.","auth/network-request-failed":"Sin conexión. Revisá tu internet."};
 const aerr=x=>AE[x&&x.code]||"No se pudo completar ("+((x&&x.code)||"error")+").";
 const gate=()=>USER?"":'<p class="msg">Ingresá para guardar tus respuestas en tu cuenta y retomarlas desde cualquier dispositivo. <button class="lnkb" style="color:var(--br)" data-act="auth">Ingresar</button></p>';
-const who=()=>USER?(USER.displayName||(USER.email||"").split("@")[0]||"Anónimo").slice(0,30):"";
+const dn=()=>USER?((P._perfil&&P._perfil.n)||USER.displayName||(USER.email||"").split("@")[0]||"Anónimo"):"";
+const who=()=>dn().slice(0,30);
 function lock(){
  if(!AR)return '<section class="cap"><p class="msg">Cargando tu sesión…</p></section>';
  return '<section class="cap ent"><h2>Ingresá para acceder al curso</h2><p>El curso es solo para personas registradas. Con tu cuenta podés ver los módulos, completar las actividades y retomar tu progreso desde cualquier dispositivo.</p><button class="btn" data-act="auth">Ingresar o crear cuenta</button></section>';
 }
 function uiAuth(){
- const b=$("#authbtn");if(b)b.textContent=USER?((USER.displayName||USER.email||"").split(/[ @]/)[0]||"Cuenta")+" (salir)":"Ingresar";
+ const b=$("#authbtn");if(b)b.textContent=USER?(dn().split(" ")[0]||"Cuenta")+" (salir)":"Ingresar";
  const g=$("#gate");if(g)g.innerHTML=gate();
  const f=$("#fn");if(f&&USER&&!f.value)f.value=USER.displayName||"";
 }
@@ -396,7 +398,7 @@ function initAuth(){
 function mergeP(c){
  let ch=false;
  const cp=c._perfil;
- if(cp){P._perfil=P._perfil||{};for(const k of["r","v"]){if(cp[k]&&cp[k]!==P._perfil[k]){P._perfil[k]=cp[k];ch=true}}}
+ if(cp){P._perfil=P._perfil||{};for(const k of["n","r","v"]){if(cp[k]&&cp[k]!==P._perfil[k]){P._perfil[k]=cp[k];ch=true}}}
  for(const id in c){
   if(id==="_perfil")continue;
   const a=st(id),b=c[id]||{};
@@ -419,7 +421,7 @@ async function loadCloud(){
 function cloud(){if(!USER||!fs)return;clearTimeout(ct);ct=setTimeout(saveNow,1200)}
 function saveNow(){
  if(!USER||!fs)return;
- fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:(USER.displayName||"").slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+ fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:dn().slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
 }
 function setMode(m){
  AM=m;
@@ -439,7 +441,7 @@ async function authSubmit(){
  if(AM==="up"&&(!n||!$("#ar").value.trim()||!$("#av").value.trim())){m.textContent="Completá tu nombre, tu especialidad y tu slogan.";return}
  m.textContent="Un momento…";
  try{
-  if(AM==="up"){PA=true;const c=await au.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:n.slice(0,40)});USER=au.currentUser;P._perfil={r:$("#ar").value.trim().slice(0,40),v:$("#av").value.trim().slice(0,90)};put()}
+  if(AM==="up"){PA=true;const c=await au.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:n.slice(0,40)});USER=au.currentUser;P._perfil={n:n.slice(0,40),r:$("#ar").value.trim().slice(0,40),v:$("#av").value.trim().slice(0,90)};put()}
   else await au.signInWithEmailAndPassword(e,p);
   $("#adlg").close();uiAuth();cardSync();
  }catch(x){console.error(x);if(AM==="up")PA=false;m.textContent=aerr(x)}
@@ -447,7 +449,7 @@ async function authSubmit(){
 async function gAuth(){
  const m=$("#am");
  if(!au){m.textContent="El ingreso no está disponible todavía.";return}
- try{await au.signInWithPopup(new firebase.auth.GoogleAuthProvider());$("#adlg").close()}catch(x){console.error(x);m.textContent=aerr(x)}
+ try{const gp=new firebase.auth.GoogleAuthProvider();gp.setCustomParameters({prompt:"select_account"});await au.signInWithPopup(gp);$("#adlg").close()}catch(x){console.error(x);m.textContent=aerr(x)}
 }
 async function resetPw(){
  const m=$("#am"),e=$("#ae").value.trim();
@@ -457,29 +459,29 @@ async function resetPw(){
 }
 function askProfile(){
  const p=P._perfil||{};
- if(!USER||PA||(p.r&&p.v))return;
+ if(!USER||PA||(p.n&&p.r&&p.v))return;
  PA=true;
- $("#pr").value=p.r||"";$("#pv").value=p.v||"";$("#pm").textContent="";
+ $("#pn").value=p.n||"";$("#pr").value=p.r||"";$("#pv").value=p.v||"";$("#pm").textContent="";
  if($("#adlg").open)$("#adlg").close();
  $("#pdlg").showModal();
 }
 $("#pdlg").addEventListener("cancel",e=>e.preventDefault());
-$("#pdlg").addEventListener("close",()=>{const p=P._perfil||{};if(USER&&!(p.r&&p.v))setTimeout(()=>{if(!$("#pdlg").open)$("#pdlg").showModal()},0)});
+$("#pdlg").addEventListener("close",()=>{const p=P._perfil||{};if(USER&&!(p.n&&p.r&&p.v))setTimeout(()=>{if(!$("#pdlg").open)$("#pdlg").showModal()},0)});
 $("#pform").addEventListener("submit",e=>{
  e.preventDefault();
- const r=$("#pr").value.trim().slice(0,40),v=$("#pv").value.trim().slice(0,90);
- if(!r||!v){$("#pm").textContent="Completá tu especialidad y tu slogan.";return}
- P._perfil={r,v};put();cardSync();$("#pdlg").close();
+ const n=$("#pn").value.trim().slice(0,40),r=$("#pr").value.trim().slice(0,40),v=$("#pv").value.trim().slice(0,90);
+ if(!n||!r||!v){$("#pm").textContent="Completá tu nombre, tu especialidad y tu slogan.";return}
+ P._perfil={n,r,v};put();cardSync();$("#pdlg").close();
 });
 function cardSync(clear){
  const p=P._perfil||{},n=$("#in1"),r=$("#in2"),v=$("#in3");
- if(USER){n.value=USER.displayName||(USER.email||"").split("@")[0]||"";r.value=p.r||"";v.value=p.v||""}
+ if(USER){n.value=dn();r.value=p.r||"";v.value=p.v||""}
  else if(clear){n.value="";r.value="";v.value=""}
  n.disabled=!!USER;
  $("#chint").textContent=USER?"Tu tarjeta se completa con los datos de tu cuenta. Podés editar tu especialidad y tu slogan.":"Probalo: escribí y mirá cómo se arma tu tarjeta de marca. Si ingresás, se completa con tus datos.";
  bind();
 }
-["#in2","#in3"].forEach(sel=>$(sel).addEventListener("input",()=>{if(!USER)return;P._perfil={r:$("#in2").value.trim().slice(0,40),v:$("#in3").value.trim().slice(0,90)};put()}));
+["#in2","#in3"].forEach(sel=>$(sel).addEventListener("input",()=>{if(!USER)return;P._perfil={...P._perfil,r:$("#in2").value.trim().slice(0,40),v:$("#in3").value.trim().slice(0,90)};put()}));
 $("#aform").addEventListener("submit",e=>{e.preventDefault();authSubmit()});
 $("#adlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
 
