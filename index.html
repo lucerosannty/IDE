@@ -505,6 +505,33 @@ $("#av").required=m==="up";
 }
 function openAuth(){setMode("in");$("#adlg").showModal()}
 function authBtn(){if(USER&&au)au.signOut();else openAuth()}
+async function gAuth(){
+  const m=$("#am");
+
+  if(!au){
+    m.textContent="Firebase todavía no está disponible.";
+    return;
+  }
+
+  try{
+    m.textContent="Conectando con Google...";
+
+    const provider=new firebase.auth.GoogleAuthProvider();
+
+    const result=await au.signInWithPopup(provider);
+
+    USER=result.user;
+
+    $("#adlg").close();
+
+    uiAuth();
+    cardSync();
+
+  }catch(error){
+    console.error("Error al ingresar con Google:",error);
+    m.textContent=aerr(error);
+  }
+}
 async function authSubmit(){
   const m=$("#am");
   const e=$("#ae").value.trim();
