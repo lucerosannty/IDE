@@ -275,7 +275,7 @@ function upd(m){const c=$("#chips");if(c){c.innerHTML=chips(m);$("#mb").style.wi
 
 const filled=m=>[...m.caps.flatMap(c=>c.f),...m.e.f].filter(([k])=>val(m,k));
 function manual(){
- return `<section class="mh"><h1>Mi manual de marca personal</h1><p class="lead">Todo lo que fuiste completando en los cuatro módulos, reunido en un solo lugar.<span id="cm" class="msg"></span></section><section class="cap ent"><h2>Manual teórico</h2><p>Material de estudio por clase: la teoría detrás de cada módulo, con sus autores de referencia, ideas para llevarte y bibliografía.</p><a class="btn" href="Manual_teorico_Marca_personal.pdf" download>Descargar el manual en PDF</a></section>`+M.map(m=>{const g=filled(m);
+ return `<section class="mh"><h1>Mi manual de marca personal</h1><p class="lead">Todo lo que fuiste completando en los cuatro módulos, reunido en un solo lugar.<span id="cm" class="msg"></span></section><section class="cap ent"><h2>Manual teórico</h2><p>Material de estudio por clase: la teoría detrás de cada módulo, con sus autores de referencia, ideas para llevarte y bibliografía.</p><a class="btn" href="Manual_teorico_Marca_personal.pdf" target="_blank" rel="noopener">Abrir el manual en PDF</a></section>`+M.map(m=>{const g=filled(m);
   return `<section class="cap"><h2>${m.id}. ${m.n}</h2>${g.length?g.map(([k,l])=>`<h3>${l}</h3><p class="pre">${E(val(m,k))}</p>`).join(""):`<p class="msg">Todavía no completaste este módulo.</p><button class="btn sm ghost" data-go="${m.s}">Ir al módulo ${m.id}</button>`}</section>`}).join("");
 }
 
