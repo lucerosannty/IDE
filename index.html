@@ -320,13 +320,13 @@ const FB={
   appId:"1:1034732296107:web:984499482a5669a641a4ee"
 };
 const TOP=["General",...M.map(m=>m.n)];
-let fs=null,FD=[],FE="",FT="Todos";
+let fs=null,FD=[],FE="",FC="",FT="Todos";
 function initForum(){
  try{
   if(FB.projectId.startsWith("TU_")){FE="cfg";rf();return}
   firebase.initializeApp(FB);fs=firebase.firestore();
-  fs.collection("foro").orderBy("t","desc").limit(200).onSnapshot(s=>{FD=s.docs.map(d=>d.data());rf()},()=>{FE="err";rf()});
- }catch(e){FE="err";rf()}
+  fs.collection("foro").orderBy("t","desc").limit(200).onSnapshot(s=>{FD=s.docs.map(d=>d.data());rf()},e=>{FE="err";FC=(e&&e.code)||"";console.error(e);rf()});
+ }catch(e){FE="err";FC=(e&&e.code)||"";console.error(e);rf()}
 }
 function foro(){
  return `<section class="mh"><h1>Foro de la comunidad</h1><p class="lead">Compartí tu opinión, una duda o lo que aprendiste en cada módulo. Cualquier persona puede leer y participar.</p></section>
@@ -338,16 +338,23 @@ function foro(){
 }
 function rf(){
  const l=$("#fl");if(!l)return;
- $("#fmsg").textContent=FE==="cfg"?"Falta conectar el foro: pegá tu configuración de Firebase en la constante FB del código.":FE?"No se pudo cargar el foro. Recargá la página.":"";
+ $("#fmsg").textContent=FE==="cfg"?"Falta conectar el foro: pegá tu configuración de Firebase en la constante FB del código.":FE?"No se pudo cargar el foro"+(FC?" ("+FC+")":"")+". Recargá la página.":"";
  const L=FD.filter(p=>FT==="Todos"||p.c===FT);
  l.innerHTML=L.length?L.map(p=>`<article class="fp"><div class="fm"><b>${E(p.n)}</b><span class="tg">${E(p.c)}</span><span>${(p.t&&p.t.toDate?p.t.toDate():new Date()).toLocaleDateString("es-AR",{day:"numeric",month:"short",year:"numeric"})}</span></div><p class="pre">${E(p.x)}</p></article>`).join(""):`<p class="msg">Todavía no hay opiniones${FT==="Todos"?"":" en este tema"}. ¡Sé la primera persona en escribir!</p>`;
 }
 async function post(){
  const s=$("#fs"),n=$("#fn").value.trim(),x=$("#fx").value.trim();
- if(!fs){s.textContent="El foro todavía no está conectado.";return}
+ if(!fs){s.textContent=FE==="cfg"?"Falta configurar Firebase en el código.":FE==="err"?"El foro no se pudo conectar. Apretá F12 y mirá la consola.":"El foro todavía se está conectando. Probá de nuevo en unos segundos.";return}
  if(!n||!x){s.textContent="Completá tu nombre y tu opinión.";return}
- try{await fs.collection("foro").add({n:n.slice(0,30),c:$("#ft").value,x:x.slice(0,600),t:firebase.firestore.FieldValue.serverTimestamp()});$("#fx").value="";s.textContent="¡Publicado!"}
- catch(e){s.textContent="No se pudo publicar. Probá de nuevo en unos segundos."}
+ s.textContent="Publicando…";
+ const espera=new Promise((_,no)=>setTimeout(()=>no({code:"timeout"}),10000));
+ try{
+  await Promise.race([fs.collection("foro").add({n:n.slice(0,30),c:$("#ft").value,x:x.slice(0,600),t:firebase.firestore.FieldValue.serverTimestamp()}),espera]);
+  $("#fx").value="";s.textContent="¡Publicado!";
+ }catch(e){
+  console.error(e);
+  s.textContent=e.code==="permission-denied"?"Firebase rechazó la publicación. Revisá que las reglas estén publicadas.":e.code==="timeout"?"Firebase no responde. Puede estar bloqueado por un bloqueador de anuncios o por la conexión.":"No se pudo publicar ("+(e.code||"error")+").";
+ }
 }
 document.addEventListener("change",e=>{if(e.target.id==="ff"){FT=e.target.value;rf()}});
 initForum();
