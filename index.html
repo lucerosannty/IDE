@@ -307,8 +307,9 @@ function view(r){
  const m=M.find(x=>x.s===r);
  $("#home").hidden=r!=="inicio";$("#app").hidden=r==="inicio";
  if(r==="inicio")homeList();
- else{$("#app").innerHTML=r==="manual"?manual():r==="foro"?foro():r==="faq"?faq():mod(m);if(r==="foro")rf();
-  if(m)document.querySelectorAll("#app textarea").forEach(t=>t.value=st(m.id).f[t.dataset.k]||"")}
+ else{const lk=!!((m||r==="manual")&&!USER);
+  $("#app").innerHTML=lk?lock():r==="manual"?manual():r==="foro"?foro():r==="faq"?faq():mod(m);if(r==="foro")rf();
+  if(m&&!lk)document.querySelectorAll("#app textarea").forEach(t=>t.value=st(m.id).f[t.dataset.k]||"")}
  window.scrollTo(0,0);
 }
 function go(r){try{history.replaceState(null,"",r==="inicio"?location.pathname+location.search:"#"+r)}catch(e){}view(r)}
@@ -352,10 +353,15 @@ document.addEventListener("input",e=>{
 addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(h!==cur&&NAV.some(n=>n[0]===h))view(h)});
 
 // Cuentas de usuario (Firebase Authentication) y guardado de respuestas en la nube
-let USER=null,au=null,AM="in",ct=null;
+let USER=null,au=null,AM="in",ct=null,AR=false;
 const AE={"auth/invalid-credential":"Correo o contraseña incorrectos.","auth/wrong-password":"Correo o contraseña incorrectos.","auth/user-not-found":"No hay una cuenta con ese correo.","auth/email-already-in-use":"Ese correo ya tiene una cuenta. Probá ingresar.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/invalid-email":"El correo no es válido.","auth/popup-closed-by-user":"Cerraste la ventana de Google antes de terminar.","auth/unauthorized-domain":"Este sitio no está autorizado en Firebase (Authentication, Configuración, Dominios autorizados).","auth/operation-not-allowed":"Ese método de ingreso no está activado en Firebase.","auth/too-many-requests":"Demasiados intentos. Probá más tarde.","auth/network-request-failed":"Sin conexión. Revisá tu internet."};
 const aerr=x=>AE[x&&x.code]||"No se pudo completar ("+((x&&x.code)||"error")+").";
 const gate=()=>USER?"":'<p class="msg">Ingresá para guardar tus respuestas en tu cuenta y retomarlas desde cualquier dispositivo. <button class="lnkb" style="color:var(--br)" data-act="auth">Ingresar</button></p>';
+const who=()=>USER?(USER.displayName||(USER.email||"").split("@")[0]||"Anónimo").slice(0,30):"";
+function lock(){
+ if(!AR)return '<section class="cap"><p class="msg">Cargando tu sesión…</p></section>';
+ return '<section class="cap ent"><h2>Ingresá para acceder al curso</h2><p>El curso es solo para personas registradas. Con tu cuenta podés ver los módulos, completar las actividades y retomar tu progreso desde cualquier dispositivo.</p><button class="btn" data-act="auth">Ingresar o crear cuenta</button></section>';
+}
 function uiAuth(){
  const b=$("#authbtn");if(b)b.textContent=USER?((USER.displayName||USER.email||"").split(/[ @]/)[0]||"Cuenta")+" (salir)":"Ingresar";
  const g=$("#gate");if(g)g.innerHTML=gate();
@@ -364,10 +370,13 @@ function uiAuth(){
 function initAuth(){
  au=firebase.auth();
  au.onAuthStateChanged(u=>{
-  const antes=USER;USER=u;uiAuth();
+  const antes=USER;USER=u;AR=true;uiAuth();
   if(u)loadCloud();
-  else if(antes){P={};try{localStorage.removeItem(KEY)}catch(e){}view(cur)}
+  else if(antes){P={};try{localStorage.removeItem(KEY)}catch(e){}}
+  if(M.some(x=>x.s===cur)||cur==="manual"||cur==="foro")view(cur);
+  else if(cur==="inicio")homeList();
  });
+ setTimeout(()=>{if(!AR){AR=true;if(cur)view(cur)}},8000);
 }
 function mergeP(c){
  let ch=false;
@@ -445,41 +454,42 @@ const FB={
 let fs=null,FD=[],FE="",FC="";
 function initForum(){
  try{
-  if(FB.projectId.startsWith("TU_")){FE="cfg";rf();return}
+  if(FB.projectId.startsWith("TU_")){FE="cfg";AR=true;rf();return}
   firebase.initializeApp(FB);fs=firebase.firestore();
   fs.settings({experimentalAutoDetectLongPolling:true});
   initAuth();
   fs.collection("foro").orderBy("t","desc").limit(200).onSnapshot(s=>{FD=s.docs.map(d=>d.data());rf()},e=>{FE="err";FC=(e&&e.code)||"";console.error(e);rf()});
- }catch(e){FE="err";FC=(e&&e.code)||"";console.error(e);rf()}
+ }catch(e){FE="err";FC=(e&&e.code)||"";AR=true;console.error(e);rf()}
 }
 function foro(){
- return `<section class="mh"><h1>Foro de la comunidad</h1><p class="lead">Compartí tu opinión, una duda o lo que aprendiste en el curso. Cualquier persona puede leer y participar.</p></section>
- <section class="cap"><h2>Dejá tu opinión</h2><p id="fmsg" class="msg"></p>
- <input type="text" id="fn" placeholder="Tu nombre" aria-label="Tu nombre" maxlength="30" value="${E(USER&&USER.displayName||"")}" style="margin-bottom:12px">
+ const form=USER?`<section class="cap"><h2>Dejá tu opinión</h2><p class="hint">Publicás como <b>${E(who())}</b>.</p><p id="fmsg" class="msg"></p>
  <label class="fld">Tu opinión<textarea id="fx" rows="4" maxlength="600" placeholder="Escribí tu opinión (hasta 600 caracteres)"></textarea></label>
- <button class="btn" data-act="post">Publicar</button> <span id="fs" class="msg"></span></section>
- <section class="cap"><h2>Opiniones</h2><div id="fl"></div></section>`;
+ <button class="btn" data-act="post">Publicar</button> <span id="fs" class="msg"></span></section>`
+ :`<section class="cap ent"><h2>Ingresá para participar</h2><p>Cualquier persona puede leer el foro, pero para escribir hace falta una cuenta.</p><p id="fmsg" class="msg"></p><button class="btn" data-act="auth">Ingresar o crear cuenta</button></section>`;
+ return `<section class="mh"><h1>Foro de la comunidad</h1><p class="lead">Compartí tu opinión, una duda o lo que aprendiste en el curso. Todos pueden leer; para escribir hace falta ingresar.</p></section>`+(AR?form:'<p id="fmsg" class="msg"></p>')+`<section class="cap"><h2>Opiniones</h2><div id="fl"></div></section>`;
 }
 function rf(){
  const l=$("#fl");if(!l)return;
- $("#fmsg").textContent=FE==="cfg"?"Falta conectar el foro: pegá tu configuración de Firebase en la constante FB del código.":FE?"No se pudo cargar el foro"+(FC?" ("+FC+")":"")+". Recargá la página.":"";
+ const fm=$("#fmsg");if(fm)fm.textContent=FE==="cfg"?"Falta conectar el foro: pegá tu configuración de Firebase en la constante FB del código.":FE?"No se pudo cargar el foro"+(FC?" ("+FC+")":"")+". Recargá la página.":"";
  const L=FD;
  l.innerHTML=L.length?L.map(p=>`<article class="fp"><div class="fm"><b>${E(p.n)}</b><span>${(p.t&&p.t.toDate?p.t.toDate():new Date()).toLocaleDateString("es-AR",{day:"numeric",month:"short",year:"numeric"})}</span></div><p class="pre">${E(p.x)}</p></article>`).join(""):`<p class="msg">Todavía no hay opiniones. ¡Sé la primera persona en escribir!</p>`;
 }
 async function post(){
- const s=$("#fs"),n=$("#fn").value.trim(),x=$("#fx").value.trim();
+ const s=$("#fs"),x=$("#fx").value.trim();
+ if(!USER){s.textContent="Ingresá para publicar.";return}
  if(!fs){s.textContent=FE==="cfg"?"Falta configurar Firebase en el código.":FE==="err"?"El foro no se pudo conectar. Apretá F12 y mirá la consola.":"El foro todavía se está conectando. Probá de nuevo en unos segundos.";return}
- if(!n||!x){s.textContent="Completá tu nombre y tu opinión.";return}
+ if(!x){s.textContent="Escribí tu opinión.";return}
  s.textContent="Publicando…";
  const espera=new Promise((_,no)=>setTimeout(()=>no({code:"timeout"}),10000));
  try{
-  await Promise.race([fs.collection("foro").add({n:n.slice(0,30),c:"General",x:x.slice(0,600),t:firebase.firestore.FieldValue.serverTimestamp()}),espera]);
+  await Promise.race([fs.collection("foro").add({n:who(),c:"General",x:x.slice(0,600),t:firebase.firestore.FieldValue.serverTimestamp(),u:USER.uid}),espera]);
   $("#fx").value="";s.textContent="¡Publicado!";
  }catch(e){
   console.error(e);
-  s.textContent=e.code==="permission-denied"?"Firebase rechazó la publicación. Revisá que las reglas estén publicadas.":e.code==="timeout"?"Firebase no responde. Puede estar bloqueado por un bloqueador de anuncios o por la conexión.":"No se pudo publicar ("+(e.code||"error")+").";
+  s.textContent=e.code==="permission-denied"?"Firebase rechazó la publicación. Revisá que las reglas estén publicadas y que hayas ingresado.":e.code==="timeout"?"Firebase no responde. Puede estar bloqueado por un bloqueador de anuncios o por la conexión.":"No se pudo publicar ("+(e.code||"error")+").";
  }
 }
+
 initForum();
 
 $("#dlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
