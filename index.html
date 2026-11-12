@@ -108,6 +108,9 @@ select{border:1px solid var(--ln);border-radius:10px;padding:10px 12px;backgroun
 .about span{color:var(--mu)}
 dialog{border:1px solid var(--ln);border-radius:18px;padding:0;max-width:560px;width:calc(100% - 32px);background:var(--sf);color:var(--ink);box-shadow:0 24px 60px -20px rgba(0,0,0,.5)}
 dialog::backdrop{background:rgba(10,14,40,.55)}
+#cdlg .dc{position:relative;padding-top:56px}
+#cdlg .cert-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border:1px solid var(--ln);border-radius:50%;background:var(--sf);color:var(--ink);font:700 24px/1 system-ui,sans-serif;cursor:pointer;display:grid;place-items:center}
+#cdlg .cert-close:hover{background:var(--so)}
 .dc{padding:28px}
 .dc ul{padding-left:1.2em;margin:0 0 22px}
 .dc li{margin-bottom:.5em}
@@ -261,11 +264,11 @@ input:disabled{opacity:.75;cursor:not-allowed}
   <button class="lnkb" type="button" data-act="out" style="color:var(--mu);margin-left:12px">Cerrar sesión</button>
  </form>
 </div></dialog>
-<dialog id="cdlg" aria-labelledby="ct2"><div class="dc">
+<dialog id="cdlg" aria-labelledby="ct2" closedby="none"><div class="dc">
+ <button class="cert-close" type="button" data-act="shutc" aria-label="Cerrar felicitación" title="Cerrar">×</button>
  <h2 id="ct2">¡Felicitaciones, completaste el curso!</h2>
  <p>¡Obtuviste el 100% de respuestas correctas en los cuatro cuestionarios! Ya podés descargar tu certificado de marca personal en PDF y compartirlo.</p>
  <button class="btn" data-act="cert">Descargar mi certificado</button>
- <button class="btn ghost" data-act="shutc" style="margin-left:8px">Ahora no</button>
  <p id="cmsg" class="msg" role="status"></p>
 </div></dialog>
 </div>
@@ -968,13 +971,16 @@ function cert(){
   pdf.addImage(c.toDataURL("image/png"),"PNG",0,0,320,200);
   pdf.save("Certificado-IDE-"+slug+".pdf");
   if(msg)msg.textContent="¡Certificado PDF descargado!";
+  // Cerrar solo después de iniciar correctamente la descarga.
+  if($("#cdlg").open)$("#cdlg").close();
  }catch(err){
   console.error("Error al generar el certificado PDF:",err);
   if(msg)msg.textContent="No se pudo generar el PDF. Intentá nuevamente.";
   alert("No se pudo generar el certificado PDF. Revisá la consola (F12) para ver el error.");
  }
 }
-$("#cdlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
+// Bloquea Escape: el pop-up se cierra solo con la X o tras descargar el PDF.
+$("#cdlg").addEventListener("cancel",e=>e.preventDefault());
 function cardSync(){
   bind();
 }
