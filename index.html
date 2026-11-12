@@ -868,12 +868,51 @@ if(!c.user.emailVerified){
     m.textContent=aerr(x);
   }
 }
+
 async function resetPw(){
- const m=$("#am"),e=$("#ae").value.trim();
- if(!au)return;
- if(!e){m.textContent="Escribí tu correo arriba y tocá de nuevo.";return}
- try{await au.sendPasswordResetEmail(e);m.textContent="Te enviamos un correo para restablecer tu contraseña."}catch(x){m.textContent=aerr(x)}
+  const m = $("#am");
+
+  if(!au){
+    alert("El servicio de recuperación no está disponible.");
+    return;
+  }
+
+  const e = $("#ae").value.trim();
+
+  if(!e){
+    alert("Ingresá tu correo electrónico para recuperar tu contraseña.");
+    $("#ae").focus();
+    return;
+  }
+
+  try{
+    m.textContent = "Enviando correo de recuperación...";
+
+    await au.sendPasswordResetEmail(e);
+
+    alert(
+      "📩 SOLICITUD DE RECUPERACIÓN\n\n" +
+      "Si el correo corresponde a una cuenta registrada, " +
+      "recibirás un enlace para crear una nueva contraseña.\n\n" +
+      "Revisá tu bandeja de entrada o spam."
+    );
+
+    m.textContent = "Revisá tu correo para restablecer tu contraseña.";
+
+  }catch(error){
+    console.error("Error al recuperar contraseña:", error);
+
+    if(error.code === "auth/invalid-email"){
+      m.textContent = "Ingresá un correo electrónico válido.";
+      alert("El correo electrónico ingresado no es válido.");
+    }else if(error.code === "auth/too-many-requests"){
+      m.textContent = "Demasiados intentos. Probá más tarde.";
+    }else{
+      m.textContent = aerr(error);
+    }
+  }
 }
+
 function rr(x,X,Y,w,h,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath()}
 function wrapTxt(x,t,w){const out=[];let l="";t.split(/\s+/).forEach(wd=>{const n=l?l+" "+wd:wd;if(x.measureText(n).width>w&&l){out.push(l);l=wd}else l=n});if(l)out.push(l);return out}
 function cert(){
