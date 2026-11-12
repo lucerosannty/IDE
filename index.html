@@ -263,7 +263,7 @@ input:disabled{opacity:.75;cursor:not-allowed}
 </div></dialog>
 <dialog id="cdlg" aria-labelledby="ct2"><div class="dc">
  <h2 id="ct2">¡Felicitaciones, completaste el curso!</h2>
- <p>Aprobaste los cuatro cuestionarios. Tu certificado es tu tarjeta de marca personal: descargala y compartila.</p>
+ <p>¡Obtuviste el 100% de respuestas correctas en los cuatro cuestionarios! Ya podés descargar tu certificado de marca personal en PDF y compartirlo.</p>
  <button class="btn" data-act="cert">Descargar mi certificado</button>
  <button class="btn ghost" data-act="shutc" style="margin-left:8px">Ahora no</button>
  <p id="cmsg" class="msg" role="status"></p>
@@ -273,6 +273,7 @@ input:disabled{opacity:.75;cursor:not-allowed}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 <script>
 // Para sumar tus videos, pegá el enlace de inserción (embed) en el campo "url" de cada módulo.
 const M=[
@@ -507,7 +508,7 @@ try{P=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){P={}}
 const put=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}cloud()};
 const st=id=>{const s=P[id]||(P[id]={});s.f=s.f||{};s.q=s.q||0;s.z=s.z||0;return s};
 const E=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const need=m=>Math.ceil(m.z.length*0.6);
+const need=m=>m.z.length;
 const ok=m=>st(m.id).z>=need(m);
 const pct=m=>ok(m)?100:0;
 const allDone=()=>M.every(ok);
@@ -539,14 +540,14 @@ function homeList(){
  const t=Math.round(M.reduce((a,m)=>a+pct(m),0)/M.length);
  $("#tot").textContent=t+"%";$("#totbar").style.width=t+"%";
  const b=$("#certbox");
- if(b)b.innerHTML=allDone()?'<p><b>¡Completaste el curso!</b> Tu certificado es tu tarjeta de marca personal.</p><button class="btn" data-act="cert">Descargar mi certificado</button>':'<p class="hint">Aprobá los cuatro cuestionarios para descargar tu certificado, que es tu tarjeta de marca personal.</p>';
+ if(b)b.innerHTML=allDone()?'<p><b>¡Completaste el curso!</b> Tu certificado es tu tarjeta de marca personal.</p><button class="btn" data-act="cert">Descargar mi certificado</button>':'<p class="hint">Respondé correctamente las 5 preguntas de cada módulo (100%) para descargar tu certificado de marca personal en PDF.</p>';
 }
 
 function mod(m){
  const i=M.indexOf(m),pv=M[i-1],nx=M[i+1];
  return `<section class="mh"><h1>Módulo ${m.id}: ${m.n}</h1><p class="q">${m.q}</p><p>${m.o}</p><div class="chips" id="chips">${chips(m)}</div><div class="bar"><i id="mb" style="width:${pct(m)}%"></i></div></section>
  <div class="video">${m.url?`<iframe src="${m.url}" title="${m.vt}" allowfullscreen></iframe>`:`<div class="ph"><span class="play">▶</span><b>${m.vt}</b><small>Acá va el video de la clase. Pegá su enlace de inserción en el campo url del módulo.</small></div>`}</div>
- <section class="cap ent"><h2>Cuestionario</h2><p class="hint">Respondé las ${m.z.length} preguntas. Necesitás ${need(m)} respuestas correctas para aprobar el módulo y podés intentarlo las veces que quieras.</p>${m.z.map((z,i)=>`<fieldset><legend>${i+1}. ${z.q}</legend>${z.o.map((o,j)=>`<label class="opt" data-q="${i}" data-o="${j}"><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("")}</fieldset>`).join("")}<button class="btn" data-act="grade">Ver resultado</button><div id="res" class="res" role="status"></div></section>
+ <section class="cap ent"><h2>Cuestionario</h2><p class="hint">Respondé las ${m.z.length} preguntas. Para aprobar necesitás el 100% (${need(m)} respuestas correctas). Podés intentarlo las veces que quieras.</p>${m.z.map((z,i)=>`<fieldset><legend>${i+1}. ${z.q}</legend>${z.o.map((o,j)=>`<label class="opt" data-q="${i}" data-o="${j}"><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("")}</fieldset>`).join("")}<button class="btn" data-act="grade">Ver resultado</button><div id="res" class="res" role="status"></div></section>
  <div class="pn">${pv?`<button class="btn ghost" data-go="${pv.s}">Anterior: ${pv.n}</button>`:"<span></span>"}${nx?`<button class="btn" data-go="${nx.s}">Siguiente: ${nx.n}</button>`:`<button class="btn" data-go="inicio">Ver mi progreso</button>`}</div>`;
 }
 function upd(m){const c=$("#chips");if(c){c.innerHTML=chips(m);$("#mb").style.width=pct(m)+"%"}}
@@ -577,7 +578,7 @@ function grade(m){
   l.classList.toggle("ok",j===z.c);l.classList.toggle("no",l.querySelector("input").checked&&j!==z.c)});
  const antes=allDone();
  s.z=Math.max(s.z,acc);put();upd(m);
- r.textContent=`Acertaste ${acc} de ${m.z.length}. `+(acc>=need(m)?"¡Aprobado! Este módulo ya cuenta como completado.":ok(m)?"Ya tenías este módulo aprobado.":"Necesitás "+need(m)+" respuestas correctas. Repasá el video y volvé a intentarlo.");
+ r.textContent=`Acertaste ${acc} de ${m.z.length}. `+(acc>=need(m)?"¡Aprobado! Este módulo ya cuenta como completado.":ok(m)?"Ya tenías este módulo aprobado.":"Necesitás el 100% ("+need(m)+" respuestas correctas). Repasá el video y volvé a intentarlo.");
  if(!antes&&allDone())setTimeout(()=>$("#cdlg").showModal(),700);
 }
 
@@ -876,12 +877,20 @@ function cert(){
  x.fillText("por completar los cuatro módulos del curso “Construí tu marca personal”",W/2,884);
  x.fillText(new Date().toLocaleDateString("es-AR",{day:"numeric",month:"long",year:"numeric"}),W/2,924);
  const slug=nombre.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-|-$/g,"")||"alumno";
- c.toBlob(b=>{
-  if(!b){if(msg)msg.textContent="No se pudo generar el certificado.";return}
-  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="Certificado-IDE-"+slug+".png";
-  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
-  if(msg)msg.textContent="Descargando tu certificado…";
- },"image/png");
+ if(!window.jspdf || !window.jspdf.jsPDF){
+  if(msg)msg.textContent="No se pudo cargar el generador de PDF. Revisá tu conexión y volvé a intentar.";
+  return;
+ }
+ try{
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:[320,200]});
+  pdf.addImage(c.toDataURL("image/png"),"PNG",0,0,320,200);
+  pdf.save("Certificado-IDE-"+slug+".pdf");
+  if(msg)msg.textContent="¡Certificado PDF descargado!";
+ }catch(err){
+  console.error("Error al generar el certificado PDF:",err);
+  if(msg)msg.textContent="No se pudo generar el PDF. Intentá nuevamente.";
+ }
 }
 $("#cdlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
 function cardSync(){
