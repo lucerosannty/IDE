@@ -846,15 +846,27 @@ if(!$("#av").value.trim()){
 
       await c.user.reload();
 if(!c.user.emailVerified){
-  await au.signOut();
+  try{
+    await c.user.sendEmailVerification();
 
-  alert(
-    "⚠️ CORREO SIN VERIFICAR\n\n" +
-    "Para ingresar a IDE, primero tenés que verificar tu dirección de correo electrónico.\n\n" +
-    "📩 Revisá tu bandeja de entrada o spam y abrí el enlace que te enviamos."
-  );
+    alert(
+      "📩 Te enviamos un nuevo correo de verificación.\n\n" +
+      "Revisá tu bandeja de entrada o spam.\n\n" +
+      "Después de verificarlo, volvé a iniciar sesión."
+    );
 
-  m.textContent="Tenés que verificar tu correo electrónico antes de ingresar.";
+    m.textContent = "Verificá tu correo antes de ingresar.";
+
+  }catch(error){
+    console.error("Error al reenviar verificación:", error);
+
+    alert("No pudimos reenviar el correo: " + aerr(error));
+    m.textContent = aerr(error);
+
+  }finally{
+    await au.signOut();
+  }
+
   return;
 }
     }
