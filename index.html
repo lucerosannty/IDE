@@ -149,11 +149,7 @@ input:disabled{opacity:.75;cursor:not-allowed}
     <div><b id="cn">Tu nombre</b><span class="r" id="cr">Tu especialidad</span></div>
     <p id="cv">“Mi slogan es...”</p>
    </div>
-<p class="hint" id="chint">
-  Al finalizar el curso, junto con tu certificado,
-  recibirás tu tarjeta de marca personal, creada
-  con los datos que completaste al registrarte.
-</p>
+<p class="hint" id="chint">Tu tarjeta de marca personal es tu certificado: la recibís al aprobar los cuatro cuestionarios, con los datos que completaste al registrarte.</p>
   </div>
  </section>
  <section class="jr">
@@ -166,7 +162,8 @@ input:disabled{opacity:.75;cursor:not-allowed}
  <section class="end">
   <h2>Tu progreso</h2>
   <div class="bar big"><i id="totbar"></i></div>
-  <p><b id="tot">0%</b> del curso completado. Al terminar tenés tu Manual de mi Marca Personal.</p>
+  <p><b id="tot">0%</b> del curso completado.</p>
+  <div id="certbox"></div>
   <button class="btn ghost" data-go="manual">Ver mi manual</button> <button class="btn ghost" data-go="foro">Ir al foro</button>
  </section>
 </div>
@@ -200,7 +197,8 @@ input:disabled{opacity:.75;cursor:not-allowed}
 <dialog id="adlg" aria-labelledby="at"><div class="dc">
  <h2 id="at">Ingresar</h2>
  <form id="aform">
-  <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="name"></label>
+  <label class="fld" id="anw" hidden>Nombre<input type="text" id="an" maxlength="40" autocomplete="given-name"></label>
+<label class="fld" id="aap" hidden>Apellido<input type="text" id="aa" maxlength="40" autocomplete="family-name"></label>
 <label class="fld" id="anr" hidden>
   Especialidad
   <input type="text" id="ar" maxlength="40">
@@ -209,8 +207,8 @@ input:disabled{opacity:.75;cursor:not-allowed}
 <label class="fld" id="anv" hidden>
   Slogan personal
   <input type="text" id="av" maxlength="90" placeholder="Mi slogan es...">
-</label><label class="fld">
-  <label class="fld">
+</label>
+<label class="fld">
   Correo electrónico
   <input
     type="email"
@@ -232,6 +230,7 @@ input:disabled{opacity:.75;cursor:not-allowed}
     required
   >
 </label>
+<label class="fld">
   Contraseña
   <input type="password" id="ap" autocomplete="current-password" minlength="6">
 </label>
@@ -249,6 +248,26 @@ input:disabled{opacity:.75;cursor:not-allowed}
  <p class="hint">Guardamos tu nombre, tu correo y tus respuestas del curso para que puedas retomarlo desde cualquier dispositivo.</p>
  <button class="btn ghost sm" type="button" data-act="shut2" style="margin-top:12px">Cerrar</button>
 </div></dialog>
+<dialog id="pdlg" aria-labelledby="pt" closedby="none"><div class="dc">
+ <h2 id="pt">Completá tu tarjeta de marca</h2>
+ <p>Para usar el curso, completá tu nombre y apellido, tu especialidad y tu slogan. Con eso armamos tu tarjeta de marca, que vas a recibir al finalizar el curso.</p>
+ <form id="pform">
+  <label class="fld">Nombre<input type="text" id="pn" maxlength="40" autocomplete="given-name"></label>
+  <label class="fld">Apellido<input type="text" id="pa" maxlength="40" autocomplete="family-name"></label>
+  <label class="fld">Especialidad<input type="text" id="pr" maxlength="40"></label>
+  <label class="fld">Slogan personal<input type="text" id="pv" maxlength="90" placeholder="Mi slogan es..."></label>
+  <p id="pm" class="msg" role="status"></p>
+  <button class="btn" type="submit">Guardar</button>
+  <button class="lnkb" type="button" data-act="out" style="color:var(--mu);margin-left:12px">Cerrar sesión</button>
+ </form>
+</div></dialog>
+<dialog id="cdlg" aria-labelledby="ct2"><div class="dc">
+ <h2 id="ct2">¡Felicitaciones, completaste el curso!</h2>
+ <p>Aprobaste los cuatro cuestionarios. Tu certificado es tu tarjeta de marca personal: descargala y compartila.</p>
+ <button class="btn" data-act="cert">Descargar mi certificado</button>
+ <button class="btn ghost" data-act="shutc" style="margin-left:8px">Ahora no</button>
+ <p id="cmsg" class="msg" role="status"></p>
+</div></dialog>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -257,72 +276,242 @@ input:disabled{opacity:.75;cursor:not-allowed}
 <script>
 // Para sumar tus videos, pegá el enlace de inserción (embed) en el campo "url" de cada módulo.
 const M=[
-{id:1,s:"espejo",n:"Espejo",url:"",q:"¿Qué dice Internet de vos cuando vos no estás?",
- o:"Reconocer qué comunicás hoy en tus redes y entender que tener presencia digital no es lo mismo que gestionar una marca personal.",
- vt:"Clase 1: El espejo digital",
- caps:[
- {t:"¿Tenés redes o tenés una marca?",tm:"0:00 – 1:45",i:"Usar las redes por inercia es solo existir en una plataforma. Gestionar una marca personal es usarlas de forma estratégica y mantener tu perfil actualizado.",
-  f:[["a1","Mirá tus últimas 5 publicaciones. Si alguien que no te conoce entrara hoy a tu perfil, ¿sabría quién sos, qué hacés y qué podés ofrecer?"],["a2","Mini actividad: en los dos perfiles del video, ¿cuál comunica una identidad profesional más clara y por qué?"]]},
- {t:"Tu huella digital",tm:"1:45 – 3:30",i:"Tu huella digital es todo lo que queda disponible sobre vos en Internet: publicaciones, fotos, comentarios, biografía, interacciones y perfiles abandonados. Habla incluso cuando no estás publicando.",
-  f:[["a3","Buscá tu nombre en Google. ¿Qué aparece primero? ¿Eso representa quién sos hoy? ¿Qué deberías actualizar o eliminar?"]]},
- {t:"Auditar tu presencia",tm:"3:30 – 5:15",i:"Con Andrés Pérez Ortega, la marca personal es la reputación que construimos y gestionamos. La matriz de autodiagnóstico te ayuda a revisar seis puntos de tu identidad.",f:[]}],
- e:{t:"Matriz de autodiagnóstico",i:"Respondé con honestidad: es tu mapa de situación para optimizar tu perfil.",
-  f:[["x1","Identidad: ¿se entiende quién soy?",2],["x2","Imagen: ¿mi perfil representa lo que quiero transmitir?",2],["x3","Contenido: ¿qué temas aparecen de forma constante?",2],["x4","Coherencia: ¿mis redes cuentan una historia similar o se contradicen?",2],["x5","Información: ¿está actualizado lo que ofrezco?",2],["x6","Diferencial: ¿se entiende qué me hace diferente?",2]]},
- z:[{q:"Usar las redes por inercia significa…",o:["Publicar todos los días","Estar en una plataforma sin estrategia ni contexto","Tener muchos seguidores"],c:1},
-    {q:"¿Qué forma parte de tu huella digital?",o:["Solo lo que publicás hoy","Únicamente tus fotos","Publicaciones, comentarios, biografía y hasta perfiles abandonados"],c:2},
-    {q:"Para Pérez Ortega, la marca personal se entiende desde…",o:["La reputación que construimos y gestionamos","El número de seguidores","El logo que elegimos"],c:0}]},
-{id:2,s:"adn",n:"ADN",url:"",q:"¿Qué tenés para decir que nadie podría decir exactamente como vos?",
- o:"Definir tu diferencial y transformarlo en una propuesta de valor y una narrativa auténtica.",vt:"Clase 2: ADN y narrativa",
- caps:[
- {t:"Encontrá tu diferencial",tm:"0:00 – 1:45",i:"Si mañana desaparecieran tus seguidores, ¿qué conocimiento, experiencia o habilidad seguiría siendo tuya? Tu diferencial está en lo que sabés hacer: qué sé, qué hago, qué problema puedo resolver y para quién.",
-  f:[["propuesta","Tu propuesta de valor: Ayudo a [persona] a [resolver problema] mediante [lo que hago]."]]},
- {t:"Autenticidad vs. personaje",tm:"1:45 – 3:30",i:"No todo tiene que ser 100 % espontáneo: se trata de construir una identidad comunicable sin inventar una persona que no sos. Con Walter Benjamin, el aura de tu marca está en que el núcleo de tu mensaje siga siendo genuino.",f:[]},
- {t:"Contá lo que hacés",tm:"3:30 – 5:30",i:"El storytelling muestra tu experiencia, recorrido, valores y aprendizajes. Después elegí tres pilares: lo que sé, lo que hago y lo que pienso o experimento. Con Henry Jenkins: tu marca es un universo de contenidos, no un solo posteo.",f:[]}],
- e:{t:"Mi ADN de marca",i:"Completá el cuadro: es la base de todo lo que vas a comunicar.",
-  f:[["bio","Biografía profesional: el lenguaje con el que te vas a comunicar con tus clientes.",3],["historia","Tu historia. Por ejemplo: “Empecé diseñando para mis propios proyectos y descubrí que…”",3],["pilares","Tus 3 pilares de contenido: lo que sé, lo que hago y lo que pienso o experimento.",3]]},
- z:[{q:"¿Dónde está tu diferencial?",o:["En los números que tenés en redes","En lo que sabés hacer, qué problema resolvés y para quién","En copiar a un referente"],c:1},
-    {q:"Mini evaluación: ¿qué presentación transmite más coherencia con una identidad auténtica?",o:["“Soy diseñadora y hago logos.”","“Empecé diseñando para mis propios proyectos y descubrí que…”"],c:1},
-    {q:"Para Benjamin, el “aura” de tu marca reside en…",o:["Que todo sea 100 % espontáneo","Usar un personaje distinto en cada red","Que el núcleo de tu mensaje siga siendo genuino aunque lo planifiques"],c:2}]},
-{id:3,s:"ecosistema",n:"Ecosistema",url:"",q:"La misma idea no habla igual en todas partes.",
- o:"Comprender que cada plataforma tiene sus propias lógicas y adaptar un mensaje sin copiar y pegar el mismo contenido.",vt:"Clase 3: Ecosistema y formatos",
- caps:[
- {t:"No todas las redes hablan el mismo idioma",tm:"0:00 – 1:45",i:"Con Carlos Scolari y la ecología de los medios: Instagram es identidad, comunidad y lo visual; TikTok, descubrimiento y rapidez; LinkedIn, experiencia y debate profesional; YouTube, profundidad y explicación.",
-  f:[["e1","¿Qué rol cumpliría cada red (Instagram, TikTok, LinkedIn, YouTube) en tu marca?"]]},
- {t:"Una idea, tres versiones",tm:"1:45 – 3:30",i:"No cambia el mensaje central, cambia la manera de contarlo. “Cómo conseguí mi primer cliente” es un video corto en TikTok, un carrusel en Instagram y un texto de reflexión en LinkedIn.",f:[]},
- {t:"Aprender de los casos",tm:"3:30 – 5:15",i:"Bizarrap y Quilmes sirven para observar identidad, comunidad, códigos, formatos y adaptación. ¿Qué hace que una marca sea reconocible aunque cambie el formato? En Bizarrap, su estética visual.",
-  f:[["e2","Elegí un caso (Bizarrap, Quilmes u otro): ¿qué lo hace reconocible aunque cambie el formato?"]]}],
- e:{t:"Una idea, tres plataformas",i:"Tomá uno de tus pilares de contenido y adaptalo a cada red.",
-  f:[["central","Mensaje central",2],["ig","Instagram: carrusel",3],["tt","TikTok: video corto",3],["li","LinkedIn: texto",3]]},
- z:[{q:"Si tenés una misma idea, ¿la publicarías igual en Instagram, TikTok y LinkedIn?",o:["Sí, copiar y pegar ahorra tiempo","No: cambia la manera de contarla, no el mensaje central","Solo en LinkedIn"],c:1},
-    {q:"¿Qué red se asocia a experiencia, conocimiento y debate profesional?",o:["TikTok","Instagram","LinkedIn"],c:2},
-    {q:"¿Qué hace reconocible a Bizarrap aunque cambie el formato?",o:["Su estética visual constante","Publicar en una sola red","Cambiar de imagen cada semana"],c:0}]},
-{id:4,s:"estrategia",n:"Estrategia",url:"",q:"Pasar de tener ideas a hacer que sucedan.",
- o:"Convertir todo lo trabajado en un plan concreto y usar la inteligencia artificial como apoyo sin perder tu identidad.",vt:"Clase 4: Planificación, métricas e IA",
- caps:[
- {t:"No necesitás publicar todos los días",tm:"0:00 – 2:00",i:"Una estrategia sostenible parte de cuatro preguntas: cuánto tiempo real tenés, qué formatos podés producir, qué frecuencia podés mantener y qué contenidos priorizás.",
-  f:[["p1","Elegí una frecuencia realista (por ejemplo, dos veces por semana) y repartí tus 3 pilares en un calendario."]]},
- {t:"¿Qué números realmente importan?",tm:"2:00 – 3:45",i:"Likes y seguidores son métricas de vanidad. Las que muestran comportamiento son interacciones, comentarios, compartidos, guardados, visualizaciones y retención, siempre según el objetivo de cada contenido.",
-  f:[["p2","¿Qué métricas de comportamiento vas a mirar y por qué?"]]},
- {t:"IA: ayudante, no reemplazo",tm:"3:45 – 6:00",i:"La IA propone ideas, arma un esquema, genera un borrador y adapta formatos. Después revisás, corregís, sumás tu experiencia y conservás tu tono: la experiencia y la voz tienen que seguir siendo tuyas.",f:[]}],
- e:{t:"Plan de acción de 15 días",i:"Tu entregable final: con esto armás tu Manual de mi Marca Personal.",
-  f:[["prompt","Tu prompt para la IA: pegá la consigna que usaste para generar el plan.",3],["plan","Plan de 15 días: frecuencia, plataformas, pilares, contenidos, formato y objetivo de cada publicación.",6],["antes","Antes: tu texto original.",3],["despues","Después: la versión revisada con IA y corregida por vos.",3]]},
- z:[{q:"Una estrategia sostenible se basa en…",o:["Publicar todos los días sin descanso","Tu tiempo real, los formatos que podés producir y una frecuencia que puedas mantener","Copiar el calendario de otra persona"],c:1},
-    {q:"¿Un video con 10.000 reproducciones siempre es mejor que uno con 1.000?",o:["Sí, siempre","Solo si tiene muchos likes","No: depende del objetivo y de que lo vea el público correcto"],c:2},
-    {q:"¿Cómo se usa la IA según el curso?",o:["Como ayudante: revisás, corregís y conservás tu tono","Como reemplazo para no escribir","Para publicar sin revisar"],c:0}]}
+ {
+  "id": 1,
+  "s": "espejo",
+  "n": "Espejo",
+  "url": "",
+  "q": "¿Qué dice Internet de vos cuando vos no estás?",
+  "o": "Reconocer qué comunicás hoy en tus redes y entender que tener presencia digital no es lo mismo que gestionar una marca personal.",
+  "vt": "Clase 1: El espejo digital",
+  "z": [
+   {
+    "q": "Usar las redes por inercia significa…",
+    "o": [
+     "Publicar todos los días",
+     "Estar en una plataforma sin estrategia ni contexto",
+     "Tener muchos seguidores"
+    ],
+    "c": 1
+   },
+   {
+    "q": "¿Qué forma parte de tu huella digital?",
+    "o": [
+     "Solo lo que publicás hoy",
+     "Únicamente tus fotos",
+     "Publicaciones, comentarios, biografía y hasta perfiles abandonados"
+    ],
+    "c": 2
+   },
+   {
+    "q": "Para Pérez Ortega, la marca personal se entiende desde…",
+    "o": [
+     "La reputación que construimos y gestionamos",
+     "El número de seguidores",
+     "El logo que elegimos"
+    ],
+    "c": 0
+   },
+   {
+    "q": "Buscás tu nombre en Google y aparecen perfiles viejos que ya no te representan. ¿Qué conviene hacer?",
+    "o": [
+     "Dejarlos: nadie los va a ver",
+     "Actualizarlos o eliminarlos para que el resultado represente quién sos hoy",
+     "Crear más perfiles nuevos sin tocar los viejos"
+    ],
+    "c": 1
+   },
+   {
+    "q": "¿Qué pregunta de la Matriz de Autodiagnóstico revisa la coherencia?",
+    "o": [
+     "¿Mis redes cuentan una historia similar o se contradicen?",
+     "¿Se entiende quién soy?",
+     "¿Está actualizado lo que ofrezco?"
+    ],
+    "c": 0
+   }
+  ]
+ },
+ {
+  "id": 2,
+  "s": "adn",
+  "n": "ADN",
+  "url": "",
+  "q": "¿Qué tenés para decir que nadie podría decir exactamente como vos?",
+  "o": "Definir tu diferencial y transformarlo en una propuesta de valor y una narrativa auténtica.",
+  "vt": "Clase 2: ADN y narrativa",
+  "z": [
+   {
+    "q": "¿Dónde está tu diferencial?",
+    "o": [
+     "En los números que tenés en redes",
+     "En lo que sabés hacer, qué problema resolvés y para quién",
+     "En copiar a un referente"
+    ],
+    "c": 1
+   },
+   {
+    "q": "¿Qué presentación transmite más coherencia con una identidad auténtica?",
+    "o": [
+     "“Soy diseñadora y hago logos.”",
+     "“Empecé diseñando para mis propios proyectos y descubrí que…”"
+    ],
+    "c": 1
+   },
+   {
+    "q": "Para Benjamin, el “aura” de tu marca reside en…",
+    "o": [
+     "Que todo sea 100 % espontáneo",
+     "Usar un personaje distinto en cada red",
+     "Que el núcleo de tu mensaje siga siendo genuino aunque lo planifiques"
+    ],
+    "c": 2
+   },
+   {
+    "q": "¿Cuál es una propuesta de valor bien armada?",
+    "o": [
+     "Soy una persona creativa y apasionada",
+     "Ayudo a emprendedores a ordenar su identidad visual mediante el diseño de logos",
+     "Hago de todo un poco"
+    ],
+    "c": 1
+   },
+   {
+    "q": "Los tres pilares de contenido son…",
+    "o": [
+     "Lo que sé, lo que hago y lo que pienso o experimento",
+     "Instagram, TikTok y LinkedIn",
+     "Texto, foto y video"
+    ],
+    "c": 0
+   }
+  ]
+ },
+ {
+  "id": 3,
+  "s": "ecosistema",
+  "n": "Ecosistema",
+  "url": "",
+  "q": "La misma idea no habla igual en todas partes.",
+  "o": "Comprender que cada plataforma tiene sus propias lógicas y adaptar un mensaje sin copiar y pegar el mismo contenido.",
+  "vt": "Clase 3: Ecosistema y formatos",
+  "z": [
+   {
+    "q": "Si tenés una misma idea, ¿la publicarías igual en Instagram, TikTok y LinkedIn?",
+    "o": [
+     "Sí, copiar y pegar ahorra tiempo",
+     "No: cambia la manera de contarla, no el mensaje central",
+     "Solo en LinkedIn"
+    ],
+    "c": 1
+   },
+   {
+    "q": "¿Qué red se asocia a experiencia, conocimiento y debate profesional?",
+    "o": [
+     "TikTok",
+     "Instagram",
+     "LinkedIn"
+    ],
+    "c": 2
+   },
+   {
+    "q": "¿Qué hace reconocible a Bizarrap aunque cambie el formato?",
+    "o": [
+     "Su estética visual constante",
+     "Publicar en una sola red",
+     "Cambiar de imagen cada semana"
+    ],
+    "c": 0
+   },
+   {
+    "q": "Tu idea es “Cómo conseguí mi primer cliente”. ¿Qué formato encaja mejor en TikTok?",
+    "o": [
+     "Un texto largo de reflexión",
+     "Un video corto y directo con tres consejos",
+     "Un carrusel de diez láminas"
+    ],
+    "c": 1
+   },
+   {
+    "q": "Según Scolari, ¿qué describe la ecología de los medios?",
+    "o": [
+     "Que los medios son entornos que conviven e influyen entre sí",
+     "Que cada red funciona de forma aislada",
+     "Que las redes solo sirven para entretener"
+    ],
+    "c": 0
+   }
+  ]
+ },
+ {
+  "id": 4,
+  "s": "estrategia",
+  "n": "Estrategia",
+  "url": "",
+  "q": "Pasar de tener ideas a hacer que sucedan.",
+  "o": "Convertir todo lo trabajado en un plan concreto y usar la inteligencia artificial como apoyo sin perder tu identidad.",
+  "vt": "Clase 4: Planificación, métricas e IA",
+  "z": [
+   {
+    "q": "Una estrategia sostenible se basa en…",
+    "o": [
+     "Publicar todos los días sin descanso",
+     "Tu tiempo real, los formatos que podés producir y una frecuencia que puedas mantener",
+     "Copiar el calendario de otra persona"
+    ],
+    "c": 1
+   },
+   {
+    "q": "¿Un video con 10.000 reproducciones siempre es mejor que uno con 1.000?",
+    "o": [
+     "Sí, siempre",
+     "Solo si tiene muchos likes",
+     "No: depende del objetivo y de que lo vea el público correcto"
+    ],
+    "c": 2
+   },
+   {
+    "q": "¿Cómo se usa la IA según el curso?",
+    "o": [
+     "Como ayudante: revisás, corregís y conservás tu tono",
+     "Como reemplazo para no escribir",
+     "Para publicar sin revisar"
+    ],
+    "c": 0
+   },
+   {
+    "q": "¿Cuál es una métrica de comportamiento?",
+    "o": [
+     "Cantidad de seguidores",
+     "Guardados y compartidos",
+     "Cantidad de likes"
+    ],
+    "c": 1
+   },
+   {
+    "q": "¿Qué incluye el plan de acción de 15 días?",
+    "o": [
+     "Solo una lista de hashtags",
+     "Únicamente las fechas de publicación",
+     "Frecuencia, plataformas, pilares, contenidos, formato y objetivo de cada publicación"
+    ],
+    "c": 2
+   }
+  ]
+ }
 ];
 
 const KEY="ide-progreso-v2",$=s=>document.querySelector(s);
 let P={},cur="";
 try{P=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){P={}}
 const put=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}cloud()};
-const st=id=>{const s=P[id]||(P[id]={});s.f=s.f||{};s.q=s.q||0;return s};
+const st=id=>{const s=P[id]||(P[id]={});s.f=s.f||{};s.q=s.q||0;s.z=s.z||0;return s};
 const E=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const val=(m,k)=>(st(m.id).f[k]||"").trim();
-const SN=["Video","Actividades","Evaluación","Entregable"];
-const steps=m=>[!!st(m.id).v,m.caps.some(c=>c.f.some(([k])=>val(m,k))),st(m.id).q>=2,m.e.f.every(([k])=>val(m,k))];
-const pct=m=>steps(m).filter(Boolean).length*25;
-const chips=m=>steps(m).map((d,i)=>`<span class="chip${d?" on":""}">${d?"✓ ":""}${SN[i]}</span>`).join("");
-const fld=(m,k,l,r)=>`<label class="fld">${l}<textarea data-m="${m.id}" data-k="${k}" rows="${r||3}" placeholder="Escribí tu respuesta"></textarea></label>`;
+const need=m=>Math.ceil(m.z.length*0.6);
+const ok=m=>st(m.id).z>=need(m);
+const pct=m=>ok(m)?100:0;
+const allDone=()=>M.every(ok);
+const chips=m=>{const z=st(m.id).z;return `<span class="chip${ok(m)?" on":""}">${ok(m)?"✓ Cuestionario aprobado":"Cuestionario pendiente"}</span>`+(z?`<span class="chip">Mejor resultado: ${z} de ${m.z.length}</span>`:"")};
 const NAV=[["inicio","Inicio"],...M.map(m=>[m.s,m.id+" "+m.n]),["foro","Foro"],["faq","Preguntas frecuentes"],["manual","Mi manual"]];
 $("#nav").innerHTML=
  `<a href="#inicio" data-go="inicio" role="tab">Inicio</a>
@@ -349,24 +538,21 @@ document.addEventListener("click", e => {
 function homeList(){
  const t=Math.round(M.reduce((a,m)=>a+pct(m),0)/M.length);
  $("#tot").textContent=t+"%";$("#totbar").style.width=t+"%";
+ const b=$("#certbox");
+ if(b)b.innerHTML=allDone()?'<p><b>¡Completaste el curso!</b> Tu certificado es tu tarjeta de marca personal.</p><button class="btn" data-act="cert">Descargar mi certificado</button>':'<p class="hint">Aprobá los cuatro cuestionarios para descargar tu certificado, que es tu tarjeta de marca personal.</p>';
 }
 
 function mod(m){
- const s=st(m.id),i=M.indexOf(m),pv=M[i-1],nx=M[i+1];
- return `<section class="mh"><h1>Módulo ${m.id}: ${m.n}</h1><p class="q">${m.q}</p><p>${m.o}</p><div id="gate">${gate()}</div><div class="chips" id="chips">${chips(m)}</div><div class="bar"><i id="mb" style="width:${pct(m)}%"></i></div></section>
+ const i=M.indexOf(m),pv=M[i-1],nx=M[i+1];
+ return `<section class="mh"><h1>Módulo ${m.id}: ${m.n}</h1><p class="q">${m.q}</p><p>${m.o}</p><div class="chips" id="chips">${chips(m)}</div><div class="bar"><i id="mb" style="width:${pct(m)}%"></i></div></section>
  <div class="video">${m.url?`<iframe src="${m.url}" title="${m.vt}" allowfullscreen></iframe>`:`<div class="ph"><span class="play">▶</span><b>${m.vt}</b><small>Acá va el video de la clase. Pegá su enlace de inserción en el campo url del módulo.</small></div>`}</div>
- <button class="btn${s.v?" ok":""}" id="vb" data-act="seen">${s.v?"✓ Video visto":"Marcar video como visto"}</button>
- ${m.caps.map(c=>`<section class="cap"><div class="ct"><h2>${c.t}</h2><span class="tm">Minuto ${c.tm}</span></div><p>${c.i}</p>${c.f.map(([k,l])=>fld(m,k,l,3)).join("")}</section>`).join("")}
- <section class="cap"><h2>Mini evaluación</h2>${m.z.map((z,i)=>`<fieldset><legend>${i+1}. ${z.q}</legend>${z.o.map((o,j)=>`<label class="opt" data-q="${i}" data-o="${j}"><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("")}</fieldset>`).join("")}<button class="btn" data-act="grade">Ver resultado</button><div id="res" class="res" role="status"></div></section>
- <section class="cap ent"><h2>Entregable: ${m.e.t}</h2><p>${m.e.i}</p>${m.e.f.map(([k,l,r])=>fld(m,k,l,r)).join("")}</section>
- <div class="pn">${pv?`<button class="btn ghost" data-go="${pv.s}">Anterior: ${pv.n}</button>`:"<span></span>"}${nx?`<button class="btn" data-go="${nx.s}">Siguiente: ${nx.n}</button>`:`<button class="btn" data-go="manual">Ver mi manual</button>`}</div>`;
+ <section class="cap ent"><h2>Cuestionario</h2><p class="hint">Respondé las ${m.z.length} preguntas. Necesitás ${need(m)} respuestas correctas para aprobar el módulo y podés intentarlo las veces que quieras.</p>${m.z.map((z,i)=>`<fieldset><legend>${i+1}. ${z.q}</legend>${z.o.map((o,j)=>`<label class="opt" data-q="${i}" data-o="${j}"><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("")}</fieldset>`).join("")}<button class="btn" data-act="grade">Ver resultado</button><div id="res" class="res" role="status"></div></section>
+ <div class="pn">${pv?`<button class="btn ghost" data-go="${pv.s}">Anterior: ${pv.n}</button>`:"<span></span>"}${nx?`<button class="btn" data-go="${nx.s}">Siguiente: ${nx.n}</button>`:`<button class="btn" data-go="inicio">Ver mi progreso</button>`}</div>`;
 }
 function upd(m){const c=$("#chips");if(c){c.innerHTML=chips(m);$("#mb").style.width=pct(m)+"%"}}
 
-const filled=m=>[...m.caps.flatMap(c=>c.f),...m.e.f].filter(([k])=>val(m,k));
 function manual(){
- return `<section class="mh"><h1>Mi manual de marca personal</h1><p class="lead">Todo lo que fuiste completando en los cuatro módulos, reunido en un solo lugar.<span id="cm" class="msg"></span></section><section class="cap ent"><h2>Manual teórico</h2><p>Material de estudio por clase: la teoría detrás de cada módulo, con sus autores de referencia, ideas para llevarte y bibliografía.</p><a class="btn" href="Manual_teorico_Marca_personal.pdf" target="_blank" rel="noopener">Abrir el manual en PDF</a></section>`+M.map(m=>{const g=filled(m);
-  return `<section class="cap"><h2>${m.id}. ${m.n}</h2>${g.length?g.map(([k,l])=>`<h3>${l}</h3><p class="pre">${E(val(m,k))}</p>`).join(""):`<p class="msg">Todavía no completaste este módulo.</p><button class="btn sm ghost" data-go="${m.s}">Ir al módulo ${m.id}</button>`}</section>`}).join("");
+ return `<section class="mh"><h1>Mi manual</h1><p class="lead">Material de estudio del curso.</p></section><section class="cap ent"><h2>Manual teórico</h2><p>Material de estudio por clase: la teoría detrás de cada módulo, con sus autores de referencia, ideas para llevarte y bibliografía.</p><a class="btn" href="Manual_teorico_Marca_personal.pdf" target="_blank" rel="noopener">Abrir el manual en PDF</a></section>`;
 }
 
 function view(r){
@@ -383,23 +569,23 @@ function view(r){
 function go(r){try{history.replaceState(null,"",r==="inicio"?location.pathname+location.search:"#"+r)}catch(e){}const menu=$("#nav .nav-group");if(menu)menu.open=false;view(r)}
 
 function grade(m){
- const s=st(m.id);let ok=0,miss=0;
- m.z.forEach((z,i)=>{const c=document.querySelector(`#app input[name=q${i}]:checked`);if(!c){miss++;return}if(+c.value===z.c)ok++});
+ const s=st(m.id);let acc=0,miss=0;
+ m.z.forEach((z,i)=>{const c=document.querySelector(`#app input[name=q${i}]:checked`);if(!c){miss++;return}if(+c.value===z.c)acc++});
  const r=$("#res");
  if(miss){r.textContent="Respondé las "+m.z.length+" preguntas para ver tu resultado.";return}
  document.querySelectorAll("#app .opt").forEach(l=>{const z=m.z[+l.dataset.q],j=+l.dataset.o;
   l.classList.toggle("ok",j===z.c);l.classList.toggle("no",l.querySelector("input").checked&&j!==z.c)});
- s.q=Math.max(s.q,ok);put();upd(m);
- r.textContent=`Acertaste ${ok} de ${m.z.length}. `+(ok>=2?"¡Aprobado! Este módulo ya cuenta como evaluado.":"Repasá el video y volvé a intentarlo.");
+ const antes=allDone();
+ s.z=Math.max(s.z,acc);put();upd(m);
+ r.textContent=`Acertaste ${acc} de ${m.z.length}. `+(acc>=need(m)?"¡Aprobado! Este módulo ya cuenta como completado.":ok(m)?"Ya tenías este módulo aprobado.":"Necesitás "+need(m)+" respuestas correctas. Repasá el video y volvé a intentarlo.");
+ if(!antes&&allDone())setTimeout(()=>$("#cdlg").showModal(),700);
 }
-
 
 document.addEventListener("click",e=>{
  const g=e.target.closest("[data-go]");if(g){e.preventDefault();go(g.dataset.go);return}
  const a=e.target.closest("[data-act]");if(!a)return;
  const k=a.dataset.act,m=M.find(x=>x.s===cur);
- if(k==="seen"){const s=st(m.id);s.v=!s.v;put();a.classList.toggle("ok",s.v);a.textContent=s.v?"✓ Video visto":"Marcar video como visto";upd(m)}
- else if(k==="grade")grade(m);
+ if(k==="grade")grade(m);
  else if(k==="post")post();
  else if(k==="about")$("#dlg").showModal();
  else if(k==="shut")$("#dlg").close();
@@ -408,27 +594,22 @@ document.addEventListener("click",e=>{
  else if(k==="google")gAuth();
  else if(k==="reset")resetPw();
  else if(k==="shut2")$("#adlg").close();
- else if(k==="copy"){
-  const t=M.map(x=>`${x.id}. ${x.n.toUpperCase()}\n`+filled(x).map(([k2,l])=>`${l}\n${val(x,k2)}`).join("\n\n")).join("\n\n");
-  const msg=$("#cm");
-  try{navigator.clipboard.writeText(t).then(()=>msg.textContent="Manual copiado.",()=>msg.textContent="No se pudo copiar. Seleccioná el texto y copialo.")}catch(err){msg.textContent="No se pudo copiar. Seleccioná el texto y copialo."}
- }
-});
-document.addEventListener("input",e=>{
- const t=e.target;if(!t.dataset||!t.dataset.k)return;
- const m=M.find(x=>x.id==t.dataset.m);st(m.id).f[t.dataset.k]=t.value;put();upd(m);
+ else if(k==="out"){if(au)au.signOut()}
+ else if(k==="cert")cert();
+ else if(k==="shutc")$("#cdlg").close();
 });
 addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(h!==cur&&NAV.some(n=>n[0]===h))view(h)});
 
 // Cuentas de usuario (Firebase Authentication) y guardado de respuestas en la nube
-let USER=null,au=null,AM="in",ct=null,AR=false;
+let USER=null,au=null,AM="in",ct=null,AR=false,PA=false;
 const AE={"auth/invalid-credential":"Correo o contraseña incorrectos.","auth/wrong-password":"Correo o contraseña incorrectos.","auth/user-not-found":"No hay una cuenta con ese correo.","auth/email-already-in-use":"Ese correo ya tiene una cuenta. Probá ingresar.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/invalid-email":"El correo no es válido.","auth/popup-closed-by-user":"Cerraste la ventana de Google antes de terminar.","auth/unauthorized-domain":"Este sitio no está autorizado en Firebase (Authentication, Configuración, Dominios autorizados).","auth/operation-not-allowed":"Ese método de ingreso no está activado en Firebase.","auth/too-many-requests":"Demasiados intentos. Probá más tarde.","auth/network-request-failed":"Sin conexión. Revisá tu internet."};
 const aerr=x=>AE[x&&x.code]||"No se pudo completar ("+((x&&x.code)||"error")+").";
 const gate=()=>USER?"":'<p class="msg">Ingresá para guardar tus respuestas en tu cuenta y retomarlas desde cualquier dispositivo. <button class="lnkb" style="color:var(--br)" data-act="auth">Ingresar</button></p>';
-const who=()=>USER?(USER.displayName||(USER.email||"").split("@")[0]||"Anónimo").slice(0,30):"";
+const dn=()=>{if(!USER)return"";const p=P._perfil||{};return [p.n,p.a].filter(Boolean).join(" ")||USER.displayName||(USER.email||"").split("@")[0]||"Anónimo"};
+const who=()=>dn().slice(0,30);
 function lock(){
  if(!AR)return '<section class="cap"><p class="msg">Cargando tu sesión…</p></section>';
- return '<section class="cap ent"><h2>Ingresá para acceder al curso</h2><p>El curso es solo para personas registradas. Con tu cuenta podés ver los módulos, completar las actividades y retomar tu progreso desde cualquier dispositivo.</p><button class="btn" data-act="auth">Ingresar o crear cuenta</button></section>';
+ return '<section class="cap ent"><h2>Ingresá para acceder al curso</h2><p>El curso es solo para personas registradas. Con tu cuenta podés ver los módulos, responder los cuestionarios y retomar tu progreso desde cualquier dispositivo.</p><button class="btn" data-act="auth">Ingresar o crear cuenta</button></section>';
 }
 function uiAuth(){
   const b=$("#authbtn");
@@ -446,7 +627,7 @@ AR=true;
 uiAuth();
 cardSync(!!antes&&!USER);
   if(USER)loadCloud();
-  else if(antes){P={};try{localStorage.removeItem(KEY)}catch(e){}}
+  else if(antes){P={};PA=false;try{localStorage.removeItem(KEY)}catch(e){}if($("#pdlg").open)$("#pdlg").close()}
   if(M.some(x=>x.s===cur)||cur==="manual"||cur==="foro")view(cur);
   else if(cur==="inicio")homeList();
  });
@@ -455,12 +636,13 @@ cardSync(!!antes&&!USER);
 function mergeP(c){
  let ch=false;
  const cp=c._perfil;
- if(cp){P._perfil=P._perfil||{};for(const k of["r","v"]){if(cp[k]&&cp[k]!==P._perfil[k]){P._perfil[k]=cp[k];ch=true}}}
+ if(cp){P._perfil=P._perfil||{};for(const k of["n","a","r","v"]){if(cp[k]&&cp[k]!==P._perfil[k]){P._perfil[k]=cp[k];ch=true}}}
  for(const id in c){
   if(id==="_perfil")continue;
   const a=st(id),b=c[id]||{};
   if(b.v&&!a.v){a.v=true;ch=true}
   if((b.q||0)>a.q){a.q=b.q;ch=true}
+  if((b.z||0)>a.z){a.z=b.z;ch=true}
   const bf=b.f||{};
   for(const k in bf){const v=bf[k]||"";if(v.trim()&&v!==a.f[k]){a.f[k]=v;ch=true}}
  }
@@ -472,13 +654,13 @@ async function loadCloud(){
   const ch=d.exists?mergeP((d.data()||{}).p||{}):false;
   try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}
   saveNow();
-  cardSync();if(ch&&cur)view(cur);else if(cur==="inicio")homeList();
+  cardSync();if(ch&&cur)view(cur);else if(cur==="inicio")homeList();askProfile();
  }catch(e){console.error(e)}
 }
 function cloud(){if(!USER||!fs)return;clearTimeout(ct);ct=setTimeout(saveNow,1200)}
 function saveNow(){
  if(!USER||!fs)return;
- fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:(USER.displayName||"").slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+ fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:dn().slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
 }
 function setMode(m){
   AM=m;
@@ -487,6 +669,7 @@ function setMode(m){
   $("#asub").textContent=m==="up"?"Registrarme":"Ingresar";
 $("#ae2wrap").hidden=m!=="up";
   $("#anw").hidden=m!=="up";
+  $("#aap").hidden=m!=="up";
   $("#anr").hidden=m!=="up";
   $("#anv").hidden=m!=="up";
   $("#ap2wrap").hidden=m!=="up";
@@ -517,6 +700,7 @@ async function gAuth(){
     m.textContent="Conectando con Google...";
 
     const provider=new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:"select_account"});
 
     const result=await au.signInWithPopup(provider);
 
@@ -532,6 +716,22 @@ async function gAuth(){
     m.textContent=aerr(error);
   }
 }
+function askProfile(){
+ const p=P._perfil||{};
+ if(!USER||PA||(p.n&&p.a&&p.r&&p.v))return;
+ PA=true;
+ $("#pn").value=p.n||"";$("#pa").value=p.a||"";$("#pr").value=p.r||"";$("#pv").value=p.v||"";$("#pm").textContent="";
+ if($("#adlg").open)$("#adlg").close();
+ $("#pdlg").showModal();
+}
+$("#pdlg").addEventListener("cancel",e=>e.preventDefault());
+$("#pdlg").addEventListener("close",()=>{const p=P._perfil||{};if(USER&&!(p.n&&p.a&&p.r&&p.v))setTimeout(()=>{if(!$("#pdlg").open)$("#pdlg").showModal()},0)});
+$("#pform").addEventListener("submit",e=>{
+ e.preventDefault();
+ const n=$("#pn").value.trim().slice(0,40),a=$("#pa").value.trim().slice(0,40),r=$("#pr").value.trim().slice(0,40),v=$("#pv").value.trim().slice(0,90);
+ if(!n||!a||!r||!v){$("#pm").textContent="Completá tu nombre, tu apellido, tu especialidad y tu slogan.";return}
+ P._perfil={n,a,r,v};put();cardSync();uiAuth();$("#pdlg").close();
+});
 async function authSubmit(){
   const m=$("#am");
   const e=$("#ae").value.trim();
@@ -568,6 +768,10 @@ if(!$("#av").value.trim()){
       m.textContent="Escribí tu nombre.";
       return;
     }
+    if(!$("#aa").value.trim()){
+      m.textContent="Escribí tu apellido.";
+      return;
+    }
 
     if(p.length<6){
       m.textContent="La contraseña debe tener al menos 6 caracteres.";
@@ -586,18 +790,10 @@ if(!$("#av").value.trim()){
     if(AM==="up"){
       const c=await au.createUserWithEmailAndPassword(e,p);
 
-      await c.user.updateProfile({
-        displayName:n.slice(0,40)
-      });
-
-      USER=au.currentUser;
-
-      P._perfil={
-        r:$("#ar").value.trim().slice(0,40),
-        v:$("#av").value.trim().slice(0,90)
-      };
-
-      put();
+      const ape=$("#aa").value.trim();
+      await c.user.updateProfile({displayName:(n+" "+ape).slice(0,80)});
+      const perfil={n:n.slice(0,40),a:ape.slice(0,40),r:$("#ar").value.trim().slice(0,40),v:$("#av").value.trim().slice(0,90)};
+      try{await fs.collection("usuarios").doc(c.user.uid).set({p:{_perfil:perfil},n:(n+" "+ape).slice(0,60),e:c.user.email||"",t:firebase.firestore.FieldValue.serverTimestamp()})}catch(x){console.error(x)}
 
       await c.user.sendEmailVerification();
 
@@ -650,6 +846,44 @@ async function resetPw(){
  if(!e){m.textContent="Escribí tu correo arriba y tocá de nuevo.";return}
  try{await au.sendPasswordResetEmail(e);m.textContent="Te enviamos un correo para restablecer tu contraseña."}catch(x){m.textContent=aerr(x)}
 }
+function rr(x,X,Y,w,h,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath()}
+function wrapTxt(x,t,w){const out=[];let l="";t.split(/\s+/).forEach(wd=>{const n=l?l+" "+wd:wd;if(x.measureText(n).width>w&&l){out.push(l);l=wd}else l=n});if(l)out.push(l);return out}
+function cert(){
+ if(!USER||!allDone())return;
+ const msg=$("#cmsg"),p=P._perfil||{},nombre=dn(),esp=p.r||"",slo=p.v||"";
+ const W=1600,H=1000,c=document.createElement("canvas");c.width=W;c.height=H;
+ const x=c.getContext("2d"),F="Arial, Helvetica, sans-serif";
+ x.fillStyle="#f6f7fb";x.fillRect(0,0,W,H);
+ x.save();rr(x,50,50,W-100,H-100,40);x.clip();
+ x.fillStyle="#ffffff";x.fillRect(0,0,W,H);
+ x.fillStyle="#f2b705";x.fillRect(0,0,W,86);
+ x.restore();
+ x.strokeStyle="#dde1ee";x.lineWidth=2;rr(x,50,50,W-100,H-100,40);x.stroke();
+ x.textAlign="left";x.fillStyle="#1f3a93";x.font="900 80px "+F;x.fillText("IDE",130,214);
+ x.fillStyle="#566080";x.font="26px "+F;x.fillText("Identidad, Desarrollo y Estrategia",132,256);
+ x.textAlign="center";
+ x.fillStyle="#141a33";x.font="800 62px "+F;x.fillText("Certificado de finalización",W/2,352);
+ x.fillStyle="#566080";x.font="30px "+F;x.fillText("Se otorga a",W/2,410);
+ x.fillStyle="#1f3a93";x.beginPath();x.arc(W/2,500,56,0,Math.PI*2);x.fill();
+ x.fillStyle="#ffffff";x.font="800 44px "+F;x.textBaseline="middle";
+ x.fillText(nombre.split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join(""),W/2,503);x.textBaseline="alphabetic";
+ let fz=88;x.font=`800 ${fz}px ${F}`;
+ while(x.measureText(nombre).width>1250&&fz>40){fz-=4;x.font=`800 ${fz}px ${F}`}
+ x.fillStyle="#1f3a93";x.fillText(nombre,W/2,642);
+ x.fillStyle="#141a33";x.font="600 38px "+F;x.fillText(esp,W/2,702);
+ if(slo){x.fillStyle="#566080";x.font="italic 34px "+F;wrapTxt(x,"“"+slo+"”",1200).slice(0,2).forEach((l,i)=>x.fillText(l,W/2,762+i*46))}
+ x.fillStyle="#566080";x.font="26px "+F;
+ x.fillText("por completar los cuatro módulos del curso “Construí tu marca personal”",W/2,884);
+ x.fillText(new Date().toLocaleDateString("es-AR",{day:"numeric",month:"long",year:"numeric"}),W/2,924);
+ const slug=nombre.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-|-$/g,"")||"alumno";
+ c.toBlob(b=>{
+  if(!b){if(msg)msg.textContent="No se pudo generar el certificado.";return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="Certificado-IDE-"+slug+".png";
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+  if(msg)msg.textContent="Descargando tu certificado…";
+ },"image/png");
+}
+$("#cdlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
 function cardSync(){
   bind();
 }
@@ -720,9 +954,7 @@ function faq(){
 function bind(){
   const p=P._perfil||{};
 
-  const n=USER
-    ? USER.displayName||(USER.email||"").split("@")[0]
-    : "";
+  const n=USER?dn():"";
 
   const r=USER?p.r||"":"";
   const v=USER?p.v||"":"";
