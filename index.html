@@ -503,9 +503,15 @@ const M=[
 ];
 
 const KEY="ide-progreso-v2",$=s=>document.querySelector(s);
-let P={},cur="";
-try{P=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){P={}}
-const put=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}cloud()};
+let P={},cur="",progressReady=false;
+// Cada cuenta tiene su propio respaldo local: no compartir el progreso entre usuarios.
+const userKey=uid=>KEY+":"+uid;
+function localProgress(uid){try{return JSON.parse(localStorage.getItem(userKey(uid)))||{}}catch(e){return {}}}
+const put=()=>{
+ if(!USER||!progressReady)return;
+ try{localStorage.setItem(userKey(USER.uid),JSON.stringify(P))}catch(e){}
+ cloud();
+};
 const st=id=>{const s=P[id]||(P[id]={});s.f=s.f||{};s.q=s.q||0;s.z=s.z||0;return s};
 const E=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const need=m=>m.z.length;
@@ -537,10 +543,14 @@ document.addEventListener("click", e => {
 });
 
 function homeList(){
- const t=Math.round(M.reduce((a,m)=>a+pct(m),0)/M.length);
+ const ready=!!USER&&progressReady;
+ const t=ready?Math.round(M.reduce((a,m)=>a+pct(m),0)/M.length):0;
  $("#tot").textContent=t+"%";$("#totbar").style.width=t+"%";
  const b=$("#certbox");
- if(b)b.innerHTML=allDone()?'<p><b>¡Completaste el curso!</b> Tu certificado es tu tarjeta de marca personal.</p><button class="btn" data-act="cert">Descargar mi certificado</button>':'<p class="hint">Respondé correctamente las 5 preguntas de cada módulo (100%) para descargar tu certificado de marca personal en PDF.</p>';
+ if(!b)return;
+ if(!USER){b.innerHTML='<p class="hint">Ingresá con tu cuenta para consultar tu progreso y descargar el certificado.</p>';return}
+ if(!progressReady){b.innerHTML='<p class="hint">Cargando tu progreso desde Firebase…</p>';return}
+ b.innerHTML=allDone()?'<p><b>¡Completaste el curso!</b> Tu certificado es tu tarjeta de marca personal.</p><button class="btn" type="button" data-act="cert">Descargar mi certificado PDF</button>':'<p class="hint">Respondé correctamente las 5 preguntas de cada módulo (100%) para descargar tu certificado de marca personal en PDF.</p>';
 }
 
 function mod(m){
@@ -563,8 +573,9 @@ function view(r){
  $("#home").hidden=r!=="inicio";$("#app").hidden=r==="inicio";
  if(r==="inicio")homeList();
  else{const lk=!!((m||r==="manual")&&!USER);
-  $("#app").innerHTML=lk?lock():r==="manual"?manual():r==="foro"?foro():r==="faq"?faq():mod(m);if(r==="foro")rf();
-  if(m&&!lk)document.querySelectorAll("#app textarea").forEach(t=>t.value=st(m.id).f[t.dataset.k]||"")}
+  const loading=!!((m||r==="manual")&&USER&&!progressReady);
+  $("#app").innerHTML=lk?lock():loading?'<section class="cap"><p class="msg">Cargando tu progreso…</p></section>':r==="manual"?manual():r==="foro"?foro():r==="faq"?faq():mod(m);if(r==="foro")rf();
+  if(m&&!lk&&!loading)document.querySelectorAll("#app textarea").forEach(t=>t.value=st(m.id).f[t.dataset.k]||"")}
  window.scrollTo(0,0);
 }
 function go(r){try{history.replaceState(null,"",r==="inicio"?location.pathname+location.search:"#"+r)}catch(e){}const menu=$("#nav .nav-group");if(menu)menu.open=false;view(r)}
@@ -622,13 +633,18 @@ function uiAuth(){
 function initAuth(){
  au=firebase.auth();
  au.onAuthStateChanged(u=>{
-  const antes=USER;
-USER=u && (u.emailVerified || u.providerData.some(p=>p.providerId==="google.com")) ? u : null;
-AR=true;
-uiAuth();
-cardSync(!!antes&&!USER);
-  if(USER)loadCloud();
-  else if(antes){P={};PA=false;try{localStorage.removeItem(KEY)}catch(e){}if($("#pdlg").open)$("#pdlg").close()}
+  const siguiente=u && (u.emailVerified || u.providerData.some(p=>p.providerId==="google.com")) ? u : null;
+  const cambioCuenta=(USER?.uid||null)!==(siguiente?.uid||null);
+  USER=siguiente;
+  AR=true;
+  if(cambioCuenta||!USER){
+   clearTimeout(ct);
+   P={};PA=false;progressReady=false;
+   if(!USER&&$("#pdlg").open)$("#pdlg").close();
+  }
+  uiAuth();
+  cardSync();
+  if(USER&&(cambioCuenta||!progressReady))loadCloud(USER);
   if(M.some(x=>x.s===cur)||cur==="manual"||cur==="foro")view(cur);
   else if(cur==="inicio")homeList();
  });
@@ -649,19 +665,30 @@ function mergeP(c){
  }
  return ch;
 }
-async function loadCloud(){
+async function loadCloud(u){
+ const uid=u.uid;
  try{
-  const d=await fs.collection("usuarios").doc(USER.uid).get();
-  const ch=d.exists?mergeP((d.data()||{}).p||{}):false;
-  try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}
+  const d=await fs.collection("usuarios").doc(uid).get();
+  // Si cambió o cerró la sesión mientras llegaba la respuesta, ignorarla.
+  if(!USER||USER.uid!==uid)return;
+  P=localProgress(uid);
+  if(d.exists)mergeP((d.data()||{}).p||{});
+  progressReady=true;
+  try{localStorage.setItem(userKey(uid),JSON.stringify(P))}catch(e){}
   saveNow();
-  cardSync();if(ch&&cur)view(cur);else if(cur==="inicio")homeList();askProfile();
- }catch(e){console.error(e)}
+  cardSync();if(cur)view(cur);askProfile();
+ }catch(e){
+  console.error("No se pudo recuperar el progreso desde Firebase:",e);
+  if(!USER||USER.uid!==uid)return;
+  P=localProgress(uid);progressReady=true;
+  cardSync();if(cur)view(cur);askProfile();
+ }
 }
-function cloud(){if(!USER||!fs)return;clearTimeout(ct);ct=setTimeout(saveNow,1200)}
+function cloud(){if(!USER||!fs||!progressReady)return;clearTimeout(ct);ct=setTimeout(saveNow,1200)}
 function saveNow(){
- if(!USER||!fs)return;
- fs.collection("usuarios").doc(USER.uid).set({p:JSON.parse(JSON.stringify(P)),n:dn().slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+ if(!USER||!fs||!progressReady)return;
+ const uid=USER.uid;
+ fs.collection("usuarios").doc(uid).set({p:JSON.parse(JSON.stringify(P)),n:dn().slice(0,60),e:USER.email||"",t:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
 }
 function setMode(m){
   AM=m;
@@ -705,7 +732,7 @@ async function gAuth(){
 
     const result=await au.signInWithPopup(provider);
 
-    USER=result.user;
+    // Firebase notificará el usuario mediante onAuthStateChanged.
 
     $("#adlg").close();
 
@@ -850,7 +877,9 @@ async function resetPw(){
 function rr(x,X,Y,w,h,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath()}
 function wrapTxt(x,t,w){const out=[];let l="";t.split(/\s+/).forEach(wd=>{const n=l?l+" "+wd:wd;if(x.measureText(n).width>w&&l){out.push(l);l=wd}else l=n});if(l)out.push(l);return out}
 function cert(){
- if(!USER||!allDone())return;
+ if(!USER){alert("Ingresá con tu cuenta para descargar el certificado.");return}
+ if(!progressReady){alert("Estamos recuperando tu progreso. Probá de nuevo en unos segundos.");return}
+ if(!allDone()){alert("Tenés que aprobar los cuatro módulos con 5 de 5 respuestas correctas para descargar el certificado.");return}
  const msg=$("#cmsg"),p=P._perfil||{},nombre=dn(),esp=p.r||"",slo=p.v||"";
  const W=1600,H=1000,c=document.createElement("canvas");c.width=W;c.height=H;
  const x=c.getContext("2d"),F="Arial, Helvetica, sans-serif";
@@ -879,6 +908,7 @@ function cert(){
  const slug=nombre.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-|-$/g,"")||"alumno";
  if(!window.jspdf || !window.jspdf.jsPDF){
   if(msg)msg.textContent="No se pudo cargar el generador de PDF. Revisá tu conexión y volvé a intentar.";
+  alert("No se pudo cargar el generador PDF. Revisá tu conexión y volvé a intentar.");
   return;
  }
  try{
@@ -890,6 +920,7 @@ function cert(){
  }catch(err){
   console.error("Error al generar el certificado PDF:",err);
   if(msg)msg.textContent="No se pudo generar el PDF. Intentá nuevamente.";
+  alert("No se pudo generar el certificado PDF. Revisá la consola (F12) para ver el error.");
  }
 }
 $("#cdlg").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
