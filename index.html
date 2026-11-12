@@ -126,6 +126,9 @@ dialog::backdrop{background:rgba(10,14,40,.55)}
 .dc{padding:28px}
 .dc ul{padding-left:1.2em;margin:0 0 22px}
 .dc li{margin-bottom:.5em}
+#dlg{max-width:640px;max-height:calc(100vh - 32px);overflow-y:auto}
+#dlg h3{margin-top:1.3em}
+.tagline{margin:1.3em 0 20px;padding-top:14px;border-top:1px solid var(--ln);color:var(--mu)}
 .qa{border-bottom:1px solid var(--ln)}
 .qa:last-child{border-bottom:0}
 .qa summary{cursor:pointer;font-weight:700;padding:14px 32px 14px 0;list-style:none;position:relative}
@@ -141,6 +144,15 @@ dialog::backdrop{background:rgba(10,14,40,.55)}
 .sep{margin:14px 0 8px}
 input:disabled{opacity:.75;cursor:not-allowed}
 @media (max-width:760px){.frow{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.mrow{grid-template-columns:40px 1fr}.side{grid-column:1/-1}}
+/* Barra de desplazamiento con la estética del sitio */
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--br) 45%,var(--bg));border:3px solid var(--bg);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:var(--br)}
+::-webkit-scrollbar-corner{background:var(--bg)}
+dialog::-webkit-scrollbar-track{background:var(--sf)}
+dialog::-webkit-scrollbar-thumb{border-color:var(--sf)}
+@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--br) 45%,var(--bg)) var(--bg)}dialog{scrollbar-color:color-mix(in srgb,var(--br) 45%,var(--sf)) var(--sf)}}
 </style>
 </head>
 <body>
@@ -154,7 +166,7 @@ input:disabled{opacity:.75;cursor:not-allowed}
 <div id="home">
  <section class="hero">
   <div>
-   <h1>Tu identidad ya comunica. Decide qué dice.</h1>
+   <h1>Tu identidad ya comunica. Decidí qué dice.</h1>
    <p>IDE (Identidad, Desarrollo y Estrategia) te acompaña en cuatro módulos para que analices tu presencia digital, descubras tu diferencial y conviertas lo que sabés en una marca personal con estrategia propia.</p>
    <div class="cta"><button class="btn" data-go="espejo">Empezar por el módulo 1</button></div>
   </div>
@@ -199,15 +211,23 @@ input:disabled{opacity:.75;cursor:not-allowed}
 </footer>
 <dialog id="dlg" aria-labelledby="dt"><div class="dc">
  <h2 id="dt">¿Quiénes somos?</h2>
- <p>Somos estudiantes de Comunicación Digital. IDE nació de algo que vemos todos los días: hay muchísima información sobre marca personal y redes sociales, pero suele estar dispersa y no contempla los objetivos de cada persona.</p>
- <h3>Qué buscamos con esta página</h3>
+ <p>Somos Lucas Paganti, Martina Gattoni y Carolina Herrera, estudiantes de Comunicación Digital y creadores de IDE (Identidad, Desarrollo y Estrategia).</p>
+ <p>IDE nació de algo que vemos todos los días: hay muchísima información sobre marca personal y redes sociales, pero suele estar dispersa y no siempre contempla los objetivos de cada persona. Frente a esto, pensamos en crear un espacio que reúna herramientas, conocimientos y estrategias para acompañar a quienes buscan construir y fortalecer su presencia en el mundo digital.</p>
+ <h3>¿Qué buscamos con esta página?</h3>
+ <p>Queremos acompañarte a construir, fortalecer y gestionar tu marca personal de forma estratégica. Para eso, buscamos que puedas:</p>
  <ul>
-  <li>Acompañarte a construir, fortalecer y gestionar tu marca personal de forma estratégica.</li>
-  <li>Que analices tu presencia digital, descubras tu diferencial y definas tu propuesta de valor.</li>
-  <li>Que aprendas a comunicar en cada red y armes tu propia estrategia de contenidos.</li>
-  <li>Que transformes tu identidad y tus conocimientos en nuevas oportunidades profesionales.</li>
+  <li>Analizar tu presencia digital y reconocer qué comunica actualmente tu perfil.</li>
+  <li>Descubrir tu diferencial y definir tu propia propuesta de valor.</li>
+  <li>Aprender a comunicar en cada red social y desarrollar una estrategia de contenidos.</li>
+  <li>Transformar tu identidad, tus conocimientos y habilidades en nuevas oportunidades profesionales.</li>
  </ul>
- <button class="btn" data-act="shut">Cerrar</button>
+ <h3>Nuestra propuesta</h3>
+ <p>Creemos que cada persona tiene algo propio para comunicar y que construir una marca personal no significa parecerse a los demás, sino reconocer aquello que te hace diferente y aprender a transmitirlo.</p>
+ <p>Por eso, IDE combina contenidos educativos, actividades prácticas y herramientas de inteligencia artificial para ayudarte a desarrollar una estrategia que represente quién sos y qué querés lograr.</p>
+ <p class="tagline"><b>IDE: Identidad, Desarrollo y Estrategia.</b> Tu identidad ya comunica. Decidí qué dice.</p>
+git add .
+git commit -m "barra de scroll con la estetica del sitio"
+git push <button class="btn" data-act="shut">Cerrar</button>
 </div></dialog>
 <dialog id="adlg" aria-labelledby="at"><div class="dc">
  <h2 id="at">Ingresar</h2>
