@@ -65,7 +65,19 @@ input[type=text],input[type=email],input[type=password]{width:100%;border:1px so
 .side{display:grid;gap:6px}
 .bar{height:8px;background:var(--so);border-radius:99px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--ac);border-radius:99px;transition:width .3s}
-.bar.big{height:12px;max-width:520px}
+/* Indicadores de progreso por módulo (sin porcentajes) */
+.progress-modules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0 12px}
+.progress-module{display:flex;flex-direction:column;justify-content:space-between;gap:16px;min-height:124px;padding:16px;background:var(--sf);border:1px solid var(--ln);border-radius:14px;color:var(--ink);text-decoration:none;transition:border-color .2s,transform .2s}
+.progress-module:hover{border-color:var(--br);transform:translateY(-2px)}
+.progress-module.approved{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 8%,var(--sf))}
+.progress-module-name{font-weight:750;line-height:1.4}
+.progress-status{display:flex;align-items:center;gap:8px;color:var(--mu);font-size:.9rem;font-weight:700}
+.progress-module.approved .progress-status{color:var(--ok)}
+.progress-mark{display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border:1px solid var(--ln);border-radius:50%;background:var(--so);color:var(--mu);font-weight:900;line-height:1}
+.progress-module.approved .progress-mark{background:var(--ok);border-color:var(--ok);color:#fff}
+.progress-summary{margin:0 0 20px;color:var(--mu);font-size:.95rem}
+@media(max-width:760px){.progress-modules{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:390px){.progress-modules{grid-template-columns:1fr}}
 .end{padding-bottom:40px}
 .mh{margin-bottom:24px}
 .mh .q{font-size:1.25rem;font-weight:600;color:var(--br);margin-bottom:.4em}
@@ -164,8 +176,8 @@ input:disabled{opacity:.75;cursor:not-allowed}
  <button class="about" data-act="about" aria-haspopup="dialog"><b>¿Quiénes somos?</b><span>Conocé al equipo detrás de IDE y qué buscamos con esta página.</span></button>
  <section class="end">
   <h2>Tu progreso</h2>
-  <div class="bar big"><i id="totbar"></i></div>
-  <p><b id="tot">0%</b> del curso completado.</p>
+  <div id="progress-modules" class="progress-modules" aria-label="Estado de los cuatro módulos"></div>
+  <p id="progress-summary" class="progress-summary" role="status" aria-live="polite">Ingresá para consultar tu progreso.</p>
   <div id="certbox"></div>
   <button class="btn ghost" data-go="manual">Ver mi manual</button> <button class="btn ghost" data-go="foro">Ir al foro</button>
  </section>
@@ -522,12 +534,12 @@ const ok=m=>st(m.id).z>=need(m);
 const pct=m=>ok(m)?100:0;
 const allDone=()=>M.every(ok);
 const chips=m=>{const z=st(m.id).z;return `<span class="chip${ok(m)?" on":""}">${ok(m)?"✓ Cuestionario aprobado":"Cuestionario pendiente"}</span>`+(z?`<span class="chip">Mejor resultado: ${z} de ${m.z.length}</span>`:"")};
-const NAV=[["inicio","Inicio"],...M.map(m=>[m.s,m.id+" "+m.n]),["foro","Foro"],["faq","Preguntas frecuentes"],["manual","Mi manual"]];
+const NAV=[["inicio","Inicio"],...M.map(m=>[m.s,m.n]),["foro","Foro"],["faq","Preguntas frecuentes"],["manual","Mi manual"]];
 $("#nav").innerHTML=
  `<a href="#inicio" data-go="inicio" role="tab">Inicio</a>
   <details class="nav-group">
    <summary>Módulos</summary>
-   <div class="nav-menu">${M.map(m=>`<a href="#${m.s}" data-go="${m.s}" role="tab">${m.id} ${m.n}</a>`).join("")}</div>
+   <div class="nav-menu">${M.map(m=>`<a href="#${m.s}" data-go="${m.s}" role="tab">${E(m.n)}</a>`).join("")}</div>
   </details>
   <a href="#foro" data-go="foro" role="tab">Foro</a>
   <a href="#faq" data-go="faq" role="tab">Preguntas frecuentes</a>
@@ -547,8 +559,20 @@ document.addEventListener("click", e => {
 
 function homeList(){
  const ready=!!USER&&progressReady;
- const t=ready?Math.round(M.reduce((a,m)=>a+pct(m),0)/M.length):0;
- $("#tot").textContent=t+"%";$("#totbar").style.width=t+"%";
+ const aprobados=ready?M.filter(m=>ok(m)).length:0;
+ // Los estados se calculan con el progreso de la cuenta activa, ya recuperado de Firebase.
+ $("#progress-modules").innerHTML=M.map(m=>{
+  const aprobado=ready&&ok(m);
+  const estado=!USER?"Iniciá sesión":!progressReady?"Cargando…":aprobado?"Aprobado":"Pendiente";
+  return `<a class="progress-module${aprobado?" approved":""}" href="#${m.s}" data-go="${m.s}" aria-label="${E(m.n)}. ${estado}">
+   <span class="progress-module-name">${E(m.n)}</span>
+   <span class="progress-status"><span class="progress-mark" aria-hidden="true">${aprobado?"✓":"○"}</span>${estado}</span>
+  </a>`;
+ }).join("");
+ $("#progress-summary").textContent=!USER
+  ?"Ingresá con tu cuenta para consultar tus módulos aprobados."
+  :!progressReady?"Cargando tu progreso desde Firebase…"
+  :`${aprobados} de ${M.length} módulos aprobados.`;
  const b=$("#certbox");
  if(!b)return;
  if(!USER){b.innerHTML='<p class="hint">Ingresá con tu cuenta para consultar tu progreso y descargar el certificado.</p>';return}
@@ -558,9 +582,9 @@ function homeList(){
 
 function mod(m){
  const i=M.indexOf(m),pv=M[i-1],nx=M[i+1];
- return `<section class="mh"><h1>Módulo ${m.id}: ${m.n}</h1><p class="q">${m.q}</p><p>${m.o}</p><div class="chips" id="chips">${chips(m)}</div><div class="bar"><i id="mb" style="width:${pct(m)}%"></i></div></section>
+ return `<section class="mh"><h1>${E(m.n)}</h1><p class="q">${m.q}</p><p>${m.o}</p><div class="chips" id="chips">${chips(m)}</div><div class="bar"><i id="mb" style="width:${pct(m)}%"></i></div></section>
  <div class="video">${m.url?`<iframe src="${m.url}" title="${m.vt}" allowfullscreen></iframe>`:`<div class="ph"><span class="play">▶</span><b>${m.vt}</b><small>Acá va el video de la clase. Pegá su enlace de inserción en el campo url del módulo.</small></div>`}</div>
- <section class="cap ent"><h2>Cuestionario</h2><p class="hint">Respondé las ${m.z.length} preguntas. Para aprobar necesitás el 100% (${need(m)} respuestas correctas). Podés intentarlo las veces que quieras.</p>${m.z.map((z,i)=>`<fieldset><legend>${i+1}. ${z.q}</legend>${z.o.map((o,j)=>`<label class="opt" data-q="${i}" data-o="${j}"><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("")}</fieldset>`).join("")}<button class="btn" data-act="grade">Ver resultado</button><div id="res" class="res" role="status"></div></section>
+ <section class="cap ent"><h2>Cuestionario</h2><p class="hint">Respondé las ${m.z.length} preguntas. Para aprobar necesitás el 100% (${need(m)} respuestas correctas). Podés intentarlo las veces que quieras.</p>${m.z.map((z,i)=>`<fieldset><legend>${i+1}. ${z.q}</legend>${z.o.map((o,j)=>`<label class="opt" data-q="${i}" data-o="${j}"><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("")}</fieldset>`).join("")}<button class="btn" data-act="grade">Confirmar Respuestas</button><div id="res" class="res" role="status"></div></section>
  <div class="pn">${pv?`<button class="btn ghost" data-go="${pv.s}">Anterior: ${pv.n}</button>`:"<span></span>"}${nx?`<button class="btn" data-go="${nx.s}">Siguiente: ${nx.n}</button>`:`<button class="btn" data-go="inicio">Ver mi progreso</button>`}</div>`;
 }
 function upd(m){const c=$("#chips");if(c){c.innerHTML=chips(m);$("#mb").style.width=pct(m)+"%"}}
