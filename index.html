@@ -85,7 +85,10 @@ input[type=text],input[type=email],input[type=password]{width:100%;border:1px so
 .chip{border:1px solid var(--ln);border-radius:99px;padding:3px 12px;font-size:.9rem;color:var(--mu)}
 .chip.on{border-color:var(--ok);color:var(--ok);font-weight:700}
 .video{aspect-ratio:16/9;background:#0e1030;border-radius:14px;overflow:hidden;margin-bottom:14px}
-.video iframe{width:100%;height:100%;border:0}
+.video iframe,.video video{display:block;width:100%;height:100%;border:0}
+.video video{object-fit:contain;background:#000}
+.video-help{font-size:.9rem;color:var(--mu);margin:-4px 0 22px}
+.video-help a{color:var(--br);font-weight:600}
 .ph{height:100%;display:grid;place-content:center;justify-items:center;gap:8px;color:#fff;text-align:center;padding:16px}
 .ph small{opacity:.7}
 .play{width:64px;height:64px;border-radius:50%;background:var(--ac);color:#141a33;display:grid;place-items:center;font-size:1.4rem}
@@ -308,13 +311,15 @@ dialog::-webkit-scrollbar-thumb{border-color:var(--sf)}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-// Para sumar tus videos, pegá el enlace de inserción (embed) en el campo "url" de cada módulo.
+// Videos MP4 locales: colocá Claseespejo.mp4, Claseadn.mp4, Claseecosistema.mp4 y Claseestrategia.mp4 junto a index.html.
+// Los nombres deben coincidir exactamente con los archivos del repositorio (GitHub Pages distingue mayúsculas/minúsculas).
 const M=[
  {
   "id": 1,
   "s": "espejo",
   "n": "Espejo",
   "url": "",
+   "video": "Claseespejo.mp4",
   "q": "¿Qué dice Internet de vos cuando vos no estás?",
   "o": "Reconocer qué comunicás hoy en tus redes y entender que tener presencia digital no es lo mismo que gestionar una marca personal.",
   "vt": "Clase 1: El espejo digital",
@@ -371,6 +376,7 @@ const M=[
   "s": "adn",
   "n": "ADN",
   "url": "",
+   "video": "Claseadn.mp4",
   "q": "¿Qué tenés para decir que nadie podría decir exactamente como vos?",
   "o": "Definir tu diferencial y transformarlo en una propuesta de valor y una narrativa auténtica.",
   "vt": "Clase 2: ADN y narrativa",
@@ -426,6 +432,7 @@ const M=[
   "s": "ecosistema",
   "n": "Ecosistema",
   "url": "",
+   "video": "Claseecosistema.mp4",
   "q": "La misma idea no habla igual en todas partes.",
   "o": "Comprender que cada plataforma tiene sus propias lógicas y adaptar un mensaje sin copiar y pegar el mismo contenido.",
   "vt": "Clase 3: Ecosistema y formatos",
@@ -482,6 +489,7 @@ const M=[
   "s": "estrategia",
   "n": "Estrategia",
   "url": "",
+   "video": "Claseestrategia.mp4",
   "q": "Pasar de tener ideas a hacer que sucedan.",
   "o": "Convertir todo lo trabajado en un plan concreto y usar la inteligencia artificial como apoyo sin perder tu identidad.",
   "vt": "Clase 4: Planificación, métricas e IA",
@@ -600,8 +608,14 @@ function homeList(){
 
 function mod(m){
  const i=M.indexOf(m),pv=M[i-1],nx=M[i+1];
+ // Reproductor local MP4 (H.264/AAC recomendado para compatibilidad).
+ const video=m.video?`<video controls playsinline preload="metadata" aria-label="${E(m.vt)}">
+   <source src="${E(m.video)}" type="video/mp4">
+   Tu navegador no permite reproducir este video.
+  </video>`:m.url?`<iframe src="${E(m.url)}" title="${E(m.vt)}" allowfullscreen></iframe>`:`<div class="ph"><span class="play">▶</span><b>${E(m.vt)}</b><small>Video pendiente de agregar.</small></div>`;
  return `<section class="mh"><h1>${E(m.n)}</h1><p class="q">${m.q}</p><p>${m.o}</p><div class="chips" id="chips">${chips(m)}</div><div class="bar"><i id="mb" style="width:${pct(m)}%"></i></div></section>
- <div class="video">${m.url?`<iframe src="${m.url}" title="${m.vt}" allowfullscreen></iframe>`:`<div class="ph"><span class="play">▶</span><b>${m.vt}</b><small>Acá va el video de la clase. Pegá su enlace de inserción en el campo url del módulo.</small></div>`}</div>
+ <div class="video">${video}</div>
+ ${m.video?`<p class="video-help">¿No se reproduce? <a href="${E(m.video)}" target="_blank" rel="noopener">Abrí el video MP4</a>.</p>`:""}
  <section class="cap ent"><h2>Cuestionario</h2><p class="hint">Respondé las ${m.z.length} preguntas. Para aprobar necesitás el 100% (${need(m)} respuestas correctas). Podés intentarlo las veces que quieras.</p>${m.z.map((z,i)=>`<fieldset><legend>${i+1}. ${z.q}</legend>${z.o.map((o,j)=>`<label class="opt" data-q="${i}" data-o="${j}"><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("")}</fieldset>`).join("")}<button class="btn" data-act="grade">Confirmar Respuestas</button><div id="res" class="res" role="status"></div></section>
  <div class="pn">${pv?`<button class="btn ghost" data-go="${pv.s}">Anterior: ${pv.n}</button>`:"<span></span>"}${nx?`<button class="btn" data-go="${nx.s}">Siguiente: ${nx.n}</button>`:`<button class="btn" data-go="inicio">Ver mi progreso</button>`}</div>`;
 }
